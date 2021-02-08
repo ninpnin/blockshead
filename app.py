@@ -670,7 +670,8 @@ def main_loop():
     print('Game Over! Final Score: '+str(blockshead1.score)+' Final Level: '+str(blockshead1.level - 1) )# print the final score
 
 canvas.after(30, main_loop)
+canvas.bind("<1>", lambda event: canvas.focus_set())
+canvas.bind("<Key>", lambda event: key_press(event))
 # TODO: is the line below actually functional? Check.
-#canvas.master.bind("", key_press)
 canvas.pack()
 canvas.mainloop()
