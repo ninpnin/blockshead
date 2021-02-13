@@ -18,8 +18,8 @@ canvas.pack()
 Main = canvas.create_rectangle(0,0,Window_Width,Window_Height,fill="#EBDCC7", belowThis = None) # create the base color similar to that of the Blockshead game
 pic = PhotoImage(width=Window_Width, height=Window_Height)
 canvas.create_image(0,0,image=pic,anchor=NW)
-pausescreen = None
-
+pausescreen = canvas.create_rectangle(0,0,Window_Width,Window_Height,fill="#EBDCC7", aboveThis = None)
+print("Pausescreen", pausescreen)
 Zombie_Dict_Made = False # have the Zombies and Blockshead been created?
 blockshead_made = False
 Run_Game = True
@@ -45,6 +45,15 @@ Zombie_Dict = {} # Where the Zombies are kept - elements are deleted as Blockshe
 Devil_Dict = {} # same as Zombie_Dict but for Devils
 Dead_Zombie_List = []
 Devil_Attack_Dict = {} # The spheres that the Devils can attack with
+
+def pause(toggle, canvas, screen):
+    toggle = not toggle
+    if pause_game:
+        canvas.tag_raise(screen)
+        canvas.itemconfigure(screen, state='normal')
+    else:
+        canvas.itemconfigure(screen, state='hidden')
+    return toggle
 
 class Edge_limits(object):
     """Tells limits in x any y direction to objects so that they don't run off of the game screen"""
@@ -373,13 +382,7 @@ class Blockshead(object):
         elif key == 'space':
             self.fire_gun()
         elif key == 'p':
-            pause_game = not pause_game
-            if pausescreen is None:
-                pausescreen = canvas.create_rectangle(0,0,Window_Width,Window_Height,fill="#EBDCC7", aboveThis = None)
-            if pause_game:
-                canvas.itemconfigure(pausescreen, state='normal')
-            else:
-                canvas.itemconfigure(pausescreen, state='hidden')
+            pause_game = pause(pause_game, canvas, pausescreen)
         elif key == 'i':
             self.gun = "Pistol"
             self.ammo = 'Infinte'
@@ -582,7 +585,10 @@ def key_press(event):
     """This function passes all of the key presses to the Blockshead1.key function for further analysis"""
     global pause_game
     press = event.keysym
-    blockshead1.key(press)
+    if press == "g":
+        startgame()
+    else:
+        blockshead1.key(press)
 
 def key_release(event):
     """This function passes all of the key presses to the Blockshead1.key function for further analysis"""
@@ -601,6 +607,8 @@ def init_game_parts():
     global blockshead1
     global Zombie_Dict
     global game_limit
+    global pause_game
+
     up = Shot()
     down = Shot()
     left = Shot()
@@ -624,10 +632,12 @@ def new_level():
         build_devil +=1
 
 def main_loop():
+
     """The central function for the game. There are 2 while loops. The inner one is only broken for a new level and the outer while loop is only broken
     if blockshead dies and the game is over"""
     global New_Level,Run_Game,Zombie_Dict,Dead_Zombie_List,Number_of_Zombies,blockshead1
     init_game_parts() # create all of the game images like the edge buffers
+
     while Run_Game:
         global Blood_Dict
         Blood_Dict = {} # create a new empty blood dictionary
@@ -701,10 +711,13 @@ def main_loop():
 
     print('Game Over! Final Score: '+str(blockshead1.score)+' Final Level: '+str(blockshead1.level - 1) )# print the final score
 
-canvas.after(30, main_loop)
+def startgame():
+    print("startgame")
+    canvas.after(30, main_loop)
+    canvas.bind("<KeyRelease>", lambda event: key_release(event))
+
 canvas.bind("<1>", lambda event: canvas.focus_set())
 canvas.bind("<Key>", lambda event: key_press(event))
-canvas.bind("<KeyRelease>", lambda event: key_release(event))
-# TODO: is the line below actually functional? Check.
+
 canvas.pack()
 canvas.mainloop()
