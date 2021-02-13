@@ -8,8 +8,10 @@ Simple 2D shooter game written in Python
   - [x] Moving the character
   - [x] health
   - [x] Shooting
+  - [ ] Simple opponent AI
   - [x] Pausing the game
   - [ ] Obstacles
+  - [ ] Health boxes
 - [ ] Weapons
   - [x] Pistol
   - [ ] Shotgun
@@ -28,3 +30,9 @@ Simple 2D shooter game written in Python
   - [ ] Sketch versions of original opponents
   - [ ] Finalized versions of original opponents
   - [ ] Comic versions of weapons
+
+# Bugs and issues
+
+- Zombies can be one-hit-KOd
+- Pause menu hides blood spots
+- Start text / instructions are not visible
