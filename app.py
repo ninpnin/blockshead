@@ -3,10 +3,11 @@ from tkinter import *
 import random
 import time
 import math
+from math import ceil
 
 # TODO: refactror into config.json
-Window_Height = 550 # set the window height and width
-Window_Width = 800
+Window_Height = 750 # set the window height and width
+Window_Width = 1000
 
 X_Window_Buffer = 40
 Y_Window_Buffer = 40
@@ -164,7 +165,7 @@ class Stats(object):
         canvas.create_rectangle(X_Window_Buffer,Y_Window_Buffer,Window_Width-X_Window_Buffer,Y_Window_Buffer+20,fill="Red")
     def update(self):
         health_string = str(blockshead1.health)
-        score_string = str(blockshead1.score)
+        score_string = str(ceil(blockshead1.score))
         level_string = str(blockshead1.level)
         gun_string = str(blockshead1.gun)
         ammo_string = str(blockshead1.ammo)
@@ -195,6 +196,7 @@ class Blockshead(object):
         self.bonus_score = 0
         self.pistol_range = 150 # the range of the pistol in pixels
         self.mine_count = 0 # how many mines are left
+        self.bullet_images = []
 
     def move(self):
         global move
@@ -273,7 +275,8 @@ class Blockshead(object):
         kill_devil = []
 
         if self.gun == "Pistol":
-            self.bullet_image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end+1,self.shoot_y_end+1,fill="Black") # create the bullet
+            bullet_image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end+1,self.shoot_y_end+1,fill="Black") # create the bullet
+            self.bullet_images.append((bullet_image, 5))
             canvas.update()
             for Each_Zombie, Zombie in Zombie_Dict.items():
                 if self.direction == 1:
@@ -325,7 +328,8 @@ class Blockshead(object):
                     del Devil_Dict[the_devil]
                     blockshead1.score+=1
                     self.bonus_score +=1
-            canvas.delete(self.bullet_image)
+
+
             self.score += (self.bonus_score / 3)
 
         if self.gun == 'Mines': # lay a mine and give it mine.x = blockshead1.x and mine.y = blockshead1.y
@@ -337,6 +341,15 @@ class Blockshead(object):
                 self.mine_count -=1
 
         canvas.update()
+
+    def update_shots(self):
+        for ix, bullet_image_tuple in enumerate(self.bullet_images):
+            bullet_image, lifetime = bullet_image_tuple
+            if lifetime < 0:
+                canvas.delete(bullet_image)
+                self.bullet_images.pop(ix)
+            else:
+                self.bullet_images[ix] = bullet_image, lifetime - 1
 
     def key(self,key):
         """Look at the input from the keyboard and adjust Blockshead accordingly. Movement = WASD Fire = Space Pistol = I Mines = U Pause = P Unpause = O"""
@@ -666,10 +679,12 @@ def main_loop():
                 """Blockshead moves"""
                 if pause_game != True:
                     blockshead1.move()
+                    blockshead1.update_shots()
+                    
                 blockshead1.pic()
                 blockshead1.shot_coords_update()
                 score_board.update()
-                time.sleep(.02) # sleep for 1/100 of a second between loops
+                time.sleep(.01) # sleep for 1/100 of a second between loops
                 canvas.update()
                 if len(Zombie_Dict) == 0 and len(Devil_Dict) == 0: # if they both = 0 then a new level is created
                     New_Level = True
