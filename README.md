@@ -11,11 +11,11 @@ Simple 2D shooter game written in Python
   - [x] Pausing the game
   - [ ] Obstacles
 - [ ] Weapons
- - [x] Pistol
- - [ ] Shotgun
- - [ ] Walls
- - [x] Mines
- - [ ] Custom weapons
+  - [x] Pistol
+  - [ ] Shotgun
+  - [ ] Walls
+  - [x] Mines
+  - [ ] Custom weapons
 - [ ] Maps
   - [ ] Original map or two
   - [ ] Custom map proof of concept
