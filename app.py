@@ -17,6 +17,7 @@ canvas.pack()
 Main = canvas.create_rectangle(0,0,Window_Width,Window_Height,fill="#EBDCC7", belowThis = None) # create the base color similar to that of the Blockshead game
 pic = PhotoImage(width=Window_Width, height=Window_Height)
 canvas.create_image(0,0,image=pic,anchor=NW)
+pausescreen = None
 
 Zombie_Dict_Made = False # have the Zombies and Blockshead been created?
 blockshead_made = False
@@ -339,7 +340,7 @@ class Blockshead(object):
 
     def key(self,key):
         """Look at the input from the keyboard and adjust Blockshead accordingly. Movement = WASD Fire = Space Pistol = I Mines = U Pause = P Unpause = O"""
-        global press,pause_game
+        global press,pause_game,pausescreen
         if key == 'w':
             self.x_vel = 0
             self.y_vel = -B_move_length
@@ -359,15 +360,25 @@ class Blockshead(object):
         elif key == 'space':
             self.fire_gun()
         elif key == 'p':
-            pause_game = True
-        elif key == 'o':
-            pause_game = False
+            pause_game = not pause_game
+            if pausescreen is None:
+                pausescreen = canvas.create_rectangle(0,0,Window_Width,Window_Height,fill="#EBDCC7", aboveThis = None)
+            if pause_game:
+                canvas.itemconfigure(pausescreen, state='normal')
+            else:
+                canvas.itemconfigure(pausescreen, state='hidden')
         elif key == 'i':
             self.gun = "Pistol"
             self.ammo = 'Infinte'
         elif key == 'u':
             self.gun = 'Mines'
             self.ammo = self.mine_count
+
+    def keyup(self, key):
+        if key in ['w', 's']:
+            self.y_vel = 0
+        elif key in ['a', 'd']:
+            self.x_vel = 0
 
     def shoot_coords(self,x_start,y_start,x_end,y_end):
         """Help to adjust the coordinates based on where to shoot from each direction"""
@@ -559,8 +570,11 @@ def key_press(event):
     global pause_game
     press = event.keysym
     blockshead1.key(press)
-    if press == 'o':
-        pause_game = False
+
+def key_release(event):
+    """This function passes all of the key presses to the Blockshead1.key function for further analysis"""
+    release = event.keysym
+    blockshead1.keyup(release)
 
 def init_game_parts():
     """ This builds all of the inital game elements that are only created once regardless of the number of levels. For example it creates the score board"""
@@ -611,6 +625,9 @@ def main_loop():
             blockshead1.health += 5 # add +5 to Blocksheads health each new level
             blockshead1.mine_count += int(Number_of_Zombies / 5) # Blockshead gets 1/5 of the # of Zombies of Mines. If there are 5 Zombies Blockshead gets 1 mine
             while New_Level == False: # the Level loop that runs until Blockshead dies or all of the Zombie/Devils have been killed
+                if pause_game:
+                    time.sleep(.2)
+
                 New_Level = False
                 """Moves the Devils and Zombies"""
                 for the_zombie in Zombie_Dict:
@@ -672,6 +689,7 @@ def main_loop():
 canvas.after(30, main_loop)
 canvas.bind("<1>", lambda event: canvas.focus_set())
 canvas.bind("<Key>", lambda event: key_press(event))
+canvas.bind("<KeyRelease>", lambda event: key_release(event))
 # TODO: is the line below actually functional? Check.
 canvas.pack()
 canvas.mainloop()
