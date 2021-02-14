@@ -32,7 +32,9 @@ Simple 2D shooter game written in Python
   - [ ] Comic versions of weapons
 - [ ] Refactoring overhaul of the codebase
   - [ ] Minimize the use of global
-  - [ ] Remove while loops
+  - [x] Remove while loops
+  - [ ] Use NumPy for coordinates
+  - [ ] Fix minor issues and inconsistancies 
 
 # Bugs and issues
 

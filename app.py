@@ -24,6 +24,7 @@ Zombie_Dict_Made = False # have the Zombies and Blockshead been created?
 blockshead_made = False
 Run_Game = True
 New_Level = False
+game_started = False
 
 B_move_length = 2 # Some the game attributes that change and are used for the initial setup. Most would be better in a central Game Class
 Zombie_per_move = .5
@@ -631,50 +632,62 @@ def new_level():
         Devil_Dict[build_devil] = D
         build_devil +=1
 
+def end_game(score, level):
+    score = str(ceil(score))
+    level = str((level - 1))
+    text = 'Game Over! Final Score: ' + score + ' Final Level: ' + level
+    print(text)
+
 def main_loop():
 
     """The central function for the game. There are 2 while loops. The inner one is only broken for a new level and the outer while loop is only broken
     if blockshead dies and the game is over"""
-    global New_Level,Run_Game,Zombie_Dict,Dead_Zombie_List,Number_of_Zombies,blockshead1
-    init_game_parts() # create all of the game images like the edge buffers
+    global New_Level,Run_Game,Zombie_Dict,Dead_Zombie_List,Number_of_Zombies,blockshead1,game_started
+    
+    if not game_started:
+        init_game_parts() # create all of the game images like the edge buffers
+        game_started = True
 
-    while Run_Game:
-        global Blood_Dict
-        Blood_Dict = {} # create a new empty blood dictionary
-        if blockshead1.health <= 0: # blockshead died - game over
-            return 'Game Over! Final Score: ' +str(blockshead1.score)+ ' Final Level: ' + str((blockshead1.level - 1))
-        else:
+    if blockshead1.health <= 0: # blockshead died - game over
+        end_game(blockshead1.score, blockshead1.level - 1)
+    else:
+        if New_Level:
             new_level()
-            blockshead1.health += 5 # add +5 to Blocksheads health each new level
-            blockshead1.mine_count += int(Number_of_Zombies / 5) # Blockshead gets 1/5 of the # of Zombies of Mines. If there are 5 Zombies Blockshead gets 1 mine
-            while New_Level == False: # the Level loop that runs until Blockshead dies or all of the Zombie/Devils have been killed
-                if pause_game:
-                    time.sleep(.2)
+            blockshead1.level += 1
+            print("New level:", blockshead1.level)
+            Number_of_Zombies = int(Number_of_Zombies * 1.7) # Increase the number of Zombies each round
 
-                New_Level = False
-                """Moves the Devils and Zombies"""
+            # create a new empty blood dictionary
+            global Blood_Dict
+            Blood_Dict = {}
+
+            # add +5 to Blocksheads health each new level
+            blockshead1.health += 5 
+            # Blockshead gets 1/5 of the # of Zombies of Mines. If there are 5 Zombies Blockshead gets 1 mine
+            blockshead1.mine_count += int(Number_of_Zombies / 5)
+            New_Level = False
+        else: # the Level loop that runs until Blockshead dies or all of the Zombie/Devils have been killed            
+            """ The attack sphere that the Devils shoot"""
+            if not pause_game:
+                destroy = []
+
                 for the_zombie in Zombie_Dict:
-                    if pause_game != True:
-                        Zombie_Dict[the_zombie].move(blockshead1)
+                    Zombie_Dict[the_zombie].move(blockshead1)
                     Zombie_Dict[the_zombie].pic()
                     Zombie_Dict[the_zombie].contact()
                 for the_devil in Devil_Dict:
-                    if pause_game != True:
-                        Devil_Dict[the_devil].move(blockshead1)
-                        Devil_Dict[the_devil].attack(blockshead1)
+                    Devil_Dict[the_devil].move(blockshead1)
+                    Devil_Dict[the_devil].attack(blockshead1)
                     Devil_Dict[the_devil].pic()
                     Devil_Dict[the_devil].contact()
 
-                destroy = []
-                """ The attack sphere that the Devils shoot"""
-                if pause_game != True:
-                    for d_attack in Devil_Attack_Dict:
-                        Devil_Attack_Dict[d_attack].move()
-                        if Devil_Attack_Dict[d_attack].life_span <= 0:
-                            destroy.append(d_attack)
-                    for item in destroy:
-                        canvas.delete(Devil_Attack_Dict[item].attack)
-                        del Devil_Attack_Dict[item]
+                for d_attack in Devil_Attack_Dict:
+                    Devil_Attack_Dict[d_attack].move()
+                    if Devil_Attack_Dict[d_attack].life_span <= 0:
+                        destroy.append(d_attack)
+                for item in destroy:
+                    canvas.delete(Devil_Attack_Dict[item].attack)
+                    del Devil_Attack_Dict[item]
 
                 """Explode the mines"""
                 mine_destroy = []
@@ -686,30 +699,18 @@ def main_loop():
                     canvas.delete(Mines_Dict[mine].image)
                     del Mines_Dict[mine]
 
-                """Blockshead moves"""
-                if pause_game != True:
-                    blockshead1.move()
-                    blockshead1.update_shots()
-                    
+                blockshead1.move()
+                blockshead1.update_shots()
+                
                 blockshead1.pic()
                 blockshead1.shot_coords_update()
                 score_board.update()
-                time.sleep(.01) # sleep for 1/100 of a second between loops
-                canvas.update()
-                if len(Zombie_Dict) == 0 and len(Devil_Dict) == 0: # if they both = 0 then a new level is created
-                    New_Level = True
-                if blockshead1.health <= 0:
-                    New_Level = True
-                    Run_Game = False
+            # sleep for 1/100 of a second between loops
+        canvas.update()
+        if len(Zombie_Dict) == 0 and len(Devil_Dict) == 0: # if they both = 0 then a new level is created
+            New_Level = True
 
-            blockshead1.level +=1
-            Number_of_Zombies = int(float(Number_of_Zombies) * 1.7) # Increase the number of Zombies each round
-            for blood in Blood_Dict: # Delete all of the blood for the new round
-                canvas.delete(Blood_Dict[blood])
-
-            New_Level = False
-
-    print('Game Over! Final Score: '+str(blockshead1.score)+' Final Level: '+str(blockshead1.level - 1) )# print the final score
+        canvas.after(5, main_loop)
 
 def startgame():
     print("startgame")
