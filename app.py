@@ -58,6 +58,8 @@ def pause(toggle, canvas, screen):
 
 class Edge_limits(object):
     """Tells limits in x any y direction to objects so that they don't run off of the game screen"""
+
+    # TODO: implemenet 
     def __init__(self):
         self.x_start = 2*X_Window_Buffer - 20
         self.y_start = 3*Y_Window_Buffer -35
@@ -225,7 +227,7 @@ class Blockshead(object):
         canvas.coords(self.image,(self.x),(self.y))
 
 
-    def shot_coords_update(self):
+    def update_shot_coords(self):
         """update the coordinates of where the gun should be fired from"""
         if self.gun == "Pistol" or self.gun == 'Mines':
             gun_range = self.pistol_range
@@ -263,7 +265,7 @@ class Blockshead(object):
         elif self.direction == 4:
             blockshead1.shoot_coords(right.x_start,right.y_start,right.x_end,right.y_end)
 
-    def pic(self):
+    def update_sprite(self):
         """Change Blockshead's image based on the direction he is moving"""
         if self.direction == 1:
             canvas.itemconfigure(self.image, image = self.image_up)
@@ -462,7 +464,7 @@ class Zombie(object):
             canvas.coords(self.zombie,(self.x),(self.y)) # move the Zombie accordingly based on if it should move or another Zombie is in its path
 
     # TODO: rename to draw
-    def pic(self):
+    def update_sprite(self):
         """Update the Zombie image based on which of the 8 directions that it is traveling in"""
         if self.y_vel < 0 and self.x_vel == 0:
             canvas.itemconfigure(self.zombie, image = self.zup)
@@ -481,10 +483,10 @@ class Zombie(object):
         if self.y_vel < 0 and self.x_vel < 0:
             canvas.itemconfigure(self.zombie, image = self.zleftup)
 
-    def contact(self):
+    def contact(self, target):
         """This is how the Zombies do damage to Blockshead. If they com in contact with Blockshead it deducts health from blockshead"""
-        if abs(blockshead1.x - self.x) < 10 and abs(blockshead1.y - self.y) < 10 and self.attacked == False:
-            blockshead1.health -= 1
+        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.attacked == False:
+            target.health -= 1
             self.attacked = True
 
 class Devil(object):
@@ -517,7 +519,10 @@ class Devil(object):
         self.y_vel = 0
         for the_devil in Devil_Dict:
             test_self = Devil_Dict[the_devil]
-            if abs(self.x - blockshead1.x) - abs(blockshead1.x - test_self.x) > 0 and abs(self.x - blockshead1.x) - abs(blockshead1.x - test_self.x) < Zombie_Buffer and abs(self.y - blockshead1.y) - abs(blockshead1.y - test_self.y) > 0 and abs(self.y - blockshead1.y) - abs(blockshead1.y - test_self.y) < Zombie_Buffer:
+            if (abs(self.x - blockshead1.x) - abs(blockshead1.x - test_self.x) > 0
+            and abs(self.x - blockshead1.x) - abs(blockshead1.x - test_self.x) < Zombie_Buffer
+            and abs(self.y - blockshead1.y) - abs(blockshead1.y - test_self.y) > 0
+            and abs(self.y - blockshead1.y) - abs(blockshead1.y - test_self.y) < Zombie_Buffer):
                 collision = True
 
         if not collision:
@@ -545,7 +550,7 @@ class Devil(object):
             self.x += self.x_vel
             canvas.coords(self.devil,(self.x),(self.y))
 
-    def pic(self):
+    def update_sprite(self):
         """update the image"""
         if self.y_vel < 0 and self.x_vel == 0:
             canvas.itemconfigure(self.devil, image = self.dup)
@@ -564,51 +569,32 @@ class Devil(object):
         if self.y_vel < 0 and self.x_vel < 0:
             canvas.itemconfigure(self.devil, image = self.dleftup)
 
-    # TODO: refactor to take bochead1 as an argument
-    def contact(self):
+    def contact(self, target):
         """If a Devil comes in contact with blockshead it deducts more health than a Zombie would"""
-        if abs(blockshead1.x - self.x) < 10 and abs(blockshead1.y - self.y) < 10 and self.attacked == False:
-            blockshead1.health -= 2
+        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.attacked == False:
+            target.health -= 2
             self.attacked = True
 
-    def attack(self,blockshead1):
+    def attack(self, target):
         """If the Devil is within +/- 200 pixels in the X and Y directions then it shoots a fireball at blockshead 1 time and then waits 45 loops to shoot agian"""
         global total_devil_attacks
-        if abs(blockshead1.x - self.x) < 200 and abs(blockshead1.y - self.y) < 200 and self.attack_fire > 45:
+        if abs(target.x - self.x) < 200 and abs(target.y - self.y) < 200 and self.attack_fire > 45:
             d_attack = Zombie_Attack(self.x,self.y,self.x_vel,self.y_vel)
             Devil_Attack_Dict[total_devil_attacks] = d_attack
-            total_devil_attacks +=1
+            total_devil_attacks += 1
             self.attack_fire = 0
         else:
-            self.attack_fire +=1
-
-def key_press(event):
-    """This function passes all of the key presses to the Blockshead1.key function for further analysis"""
-    global pause_game
-    press = event.keysym
-    if press == "g":
-        startgame()
-    else:
-        blockshead1.key(press)
-
-def key_release(event):
-    """This function passes all of the key presses to the Blockshead1.key function for further analysis"""
-    release = event.keysym
-    blockshead1.keyup(release)
+            self.attack_fire += 1
 
 def init_game_parts():
     """ This builds all of the inital game elements that are only created once regardless of the number of levels. For example it creates the score board"""
     global up, down, right, left
-    global down
-    global right
-    global left
     global current_shot
     global game_limit
     global score_board
     global blockshead1
     global Zombie_Dict
     global game_limit
-    global pause_game
 
     up = Shot()
     down = Shot()
@@ -619,18 +605,26 @@ def init_game_parts():
     blockshead1 = Blockshead()
     score_board = Stats()
 
-def new_level():
+def new_level(blockshead):
     """For every new level all of the Devils and Zombies have been killed so new ones need to be created. Each time 70% more Zombies are added"""
     build_zombie = 0
     build_devil = 0
     for i in range(Number_of_Zombies):
-            z = Zombie()
-            Zombie_Dict[build_zombie] = z
-            build_zombie+=1
+        z = Zombie()
+        Zombie_Dict[build_zombie] = z
+        build_zombie+=1
+
     for i in range(int(Number_of_Zombies / 5)):
         D = Devil()
         Devil_Dict[build_devil] = D
         build_devil +=1
+
+    blockshead.health += 5 
+    blockshead.mine_count += int(Number_of_Zombies / 5)
+    blockshead1.level += 1
+    
+    print("New level:", blockshead.level)
+    return blockshead
 
 def end_game(score, level):
     score = str(ceil(score))
@@ -638,78 +632,71 @@ def end_game(score, level):
     text = 'Game Over! Final Score: ' + score + ' Final Level: ' + level
     print(text)
 
-def main_loop():
+# TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
+def key_press(event):
+    global pause_game
+    press = event.keysym
+    if press == "g":
+        startgame()
+    else:
+        blockshead1.key(press)
 
-    """The central function for the game. There are 2 while loops. The inner one is only broken for a new level and the outer while loop is only broken
-    if blockshead dies and the game is over"""
+def key_release(event):
+    release = event.keysym
+    blockshead1.keyup(release)
+
+def main_loop():
     global New_Level,Run_Game,Zombie_Dict,Dead_Zombie_List,Number_of_Zombies,blockshead1,game_started
     
     if not game_started:
-        init_game_parts() # create all of the game images like the edge buffers
+        init_game_parts()
         game_started = True
 
-    if blockshead1.health <= 0: # blockshead died - game over
+    if blockshead1.health <= 0:
         end_game(blockshead1.score, blockshead1.level - 1)
     else:
         if New_Level:
-            new_level()
-            blockshead1.level += 1
-            print("New level:", blockshead1.level)
-            Number_of_Zombies = int(Number_of_Zombies * 1.7) # Increase the number of Zombies each round
+            blockshead1 = new_level(blockshead1)
+            Number_of_Zombies = int(Number_of_Zombies * 1.7)
 
             # create a new empty blood dictionary
             global Blood_Dict
-            Blood_Dict = {}
-
-            # add +5 to Blocksheads health each new level
-            blockshead1.health += 5 
-            # Blockshead gets 1/5 of the # of Zombies of Mines. If there are 5 Zombies Blockshead gets 1 mine
-            blockshead1.mine_count += int(Number_of_Zombies / 5)
-            New_Level = False
-        else: # the Level loop that runs until Blockshead dies or all of the Zombie/Devils have been killed            
-            """ The attack sphere that the Devils shoot"""
+            Blood_Dict = dict()
+        else:
             if not pause_game:
                 destroy = []
+                for _, zombie in Zombie_Dict.items():
+                    zombie.move(blockshead1)
+                    zombie.update_sprite()
+                    zombie.contact(blockshead1)
+                for _, devil in Devil_Dict.items():
+                    devil.move(blockshead1)
+                    devil.attack(blockshead1)
+                    devil.update_sprite()
+                    devil.contact(blockshead1)
 
-                for the_zombie in Zombie_Dict:
-                    Zombie_Dict[the_zombie].move(blockshead1)
-                    Zombie_Dict[the_zombie].pic()
-                    Zombie_Dict[the_zombie].contact()
-                for the_devil in Devil_Dict:
-                    Devil_Dict[the_devil].move(blockshead1)
-                    Devil_Dict[the_devil].attack(blockshead1)
-                    Devil_Dict[the_devil].pic()
-                    Devil_Dict[the_devil].contact()
+                for attack_name, attack in list(Devil_Attack_Dict.items()):
+                    attack.move()
+                    if attack.life_span <= 0:
+                        canvas.delete(attack.attack)
+                        del Devil_Attack_Dict[attack_name]
 
-                for d_attack in Devil_Attack_Dict:
-                    Devil_Attack_Dict[d_attack].move()
-                    if Devil_Attack_Dict[d_attack].life_span <= 0:
-                        destroy.append(d_attack)
-                for item in destroy:
-                    canvas.delete(Devil_Attack_Dict[item].attack)
-                    del Devil_Attack_Dict[item]
-
-                """Explode the mines"""
-                mine_destroy = []
-                for mine in Mines_Dict:
+                for mine, _ in list(Mines_Dict.items()):
                     Mines_Dict[mine].explode()
                     if Mines_Dict[mine].destroy:
-                        mine_destroy.append(mine)
-                for mine in mine_destroy:
-                    canvas.delete(Mines_Dict[mine].image)
-                    del Mines_Dict[mine]
+                        canvas.delete(Mines_Dict[mine].image)
+                        del Mines_Dict[mine]
 
                 blockshead1.move()
                 blockshead1.update_shots()
-                
-                blockshead1.pic()
-                blockshead1.shot_coords_update()
+                blockshead1.update_sprite()
+                blockshead1.update_shot_coords()
                 score_board.update()
-            # sleep for 1/100 of a second between loops
-        canvas.update()
-        if len(Zombie_Dict) == 0 and len(Devil_Dict) == 0: # if they both = 0 then a new level is created
-            New_Level = True
 
+        # Move to the next level if there are no enemies left
+        New_Level = len(Zombie_Dict) == 0 and len(Devil_Dict) == 0
+
+        canvas.update()
         canvas.after(5, main_loop)
 
 def startgame():
