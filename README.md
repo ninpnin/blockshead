@@ -30,6 +30,9 @@ Simple 2D shooter game written in Python
   - [ ] Sketch versions of original opponents
   - [ ] Finalized versions of original opponents
   - [ ] Comic versions of weapons
+- [ ] Refactoring overhaul of the codebase
+  - [ ] Minimize the use of global
+  - [ ] Remove while loops
 
 # Bugs and issues
 
