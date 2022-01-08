@@ -154,19 +154,17 @@ class Blockshead(object):
 
     def fire_gun(self, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
-        global blood_marks,blood_dict
         self.bonus_score = 0
         Dead_Zombie_List = []
         which_zombie = 0
-        global Zombie_Dict
         kill_list = [] # the librarys that hold which Zombie needs to be deleted from Zombie_Dict
         kill_devil = []
 
         if self.gun == "Pistol":
             self.shoot_x_start = int(np.sign(self.x_vel) * 20) + self.x
-            self.shoot_x_end = int(np.sign(self.x_vel) * 200) + self.x
+            self.shoot_x_end = int(np.sign(self.x_vel) * 200) + self.x + 1
             self.shoot_y_start = int(np.sign(self.y_vel) * 20) + self.y
-            self.shoot_y_end = int(np.sign(self.y_vel) * 200) + self.y
+            self.shoot_y_end = int(np.sign(self.y_vel) * 200) + self.y + 1
             bullet_image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end+1,self.shoot_y_end+1,fill="Black") # create the bullet
             self.bullet_images.append((bullet_image, 5))
             canvas.update()
@@ -230,11 +228,11 @@ class Blockshead(object):
 
         canvas.update()
 
-    def update_shots(self):
+    def update_shots(self, game_config):
         for ix, bullet_image_tuple in enumerate(self.bullet_images):
             bullet_image, lifetime = bullet_image_tuple
             if lifetime < 0:
-                canvas.delete(bullet_image)
+                game_config.canvas.delete(bullet_image)
                 self.bullet_images.pop(ix)
             else:
                 self.bullet_images[ix] = bullet_image, lifetime - 1
@@ -506,7 +504,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
                     del game_state.Devil_Attack_Dict[attack_name]
 
             game_state.blockshead.move(window, game_config.canvas)
-            #game_state.blockshead.update_shots()
+            game_state.blockshead.update_shots(game_config)
             game_state.blockshead.update_sprite(game_config)
             #game_state.blockshead.update_shot_coords()
             game_state.stats.update(game_config, game_state)
