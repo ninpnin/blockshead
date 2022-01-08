@@ -17,7 +17,7 @@ def initialize_game():
     canvas = tk.Canvas(highlightthickness=0, height=window.height, width=window.width)
     canvas.master.title("Blockshead")
     canvas.pack()
-    Main = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", belowThis=None)
+    background = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", belowThis=None)
     pic = PhotoImage(width=window.width, height=window.height)
     canvas.create_image(0,0,image=pic,anchor=NW)
     pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
@@ -25,6 +25,7 @@ def initialize_game():
 
     init_state = InitState()
     game_config = GameConfig(canvas=canvas)
+    game_config.background = background
     game_state = GameState()
     game_state.blockshead = Blockshead(window, game_config)
     game_state.stats = Stats(window, canvas)
@@ -49,12 +50,11 @@ def pause(toggle, canvas, screen):
 class Blood(object):
     """What happens when you kill something. It create a blood spot on the coordinates of the killed Zombie(s) / Devil(s)
     They are deleted at the beginning of each new level"""
-    def __init__(self,x,y):
-        global base_for_blood
+    def __init__(self,x,y, game_config):
         self.image = PhotoImage(file = "images/game_elements/blood.png")
-        self.blood_spot = canvas.create_image(x,y,image = self.image)
-        canvas.tag_lower(self.blood_spot)
-        canvas.tag_lower(Main)
+        self.blood_spot = game_config.canvas.create_image(x,y,image = self.image)
+        game_config.canvas.tag_lower(self.blood_spot)
+        game_config.canvas.tag_lower(game_config.background)
 
 class Zombie_Attack(object):
     """The yellow circle that the zombies uses to attack Blockshead. It has a life span of 125 instances in the while loop before it disappears.
@@ -62,7 +62,7 @@ class Zombie_Attack(object):
     def __init__(self, x, y, x_vel, y_vel, canvas):
         self.x = x
         self.y = y
-        self.image = PhotoImage(file = "images/game_elements/devil_a.png")
+        self.image = PhotoImage(file = "images/game_elements/devil_a_old.png")
         self.attack = canvas.create_image(self.x,self.y,image = self.image)
         self.x_vel = x_vel
         if self.x_vel > 0: # If the velocity in that direction is not 0 it adds 1 to the speed so that it is faster than the Devil who shot it.
@@ -141,45 +141,6 @@ class Blockshead(object):
         self.y += self.y_vel
         canvas.coords(self.image,(self.x),(self.y))
 
-
-    def update_shot_coords(self):
-        """update the coordinates of where the gun should be fired from"""
-        if self.gun == "Pistol" or self.gun == 'Mines':
-            gun_range = self.pistol_range
-        global up
-        global down
-        global left
-        global right
-
-        up.x_start = 10 + blockshead1.x
-        up.y_start = -5 + blockshead1.y
-        up.x_end = 11 + blockshead1.x
-        up.y_end = blockshead1.y - (gun_range + 5)
-
-        down.x_start = blockshead1.x - 10
-        down.y_start = 5 + blockshead1.y
-        down.x_end = blockshead1.x - 9
-        down.y_end = gun_range+5 + blockshead1.y
-
-        left.x_start = 15 + blockshead1.x
-        left.y_start = blockshead1.y - 15
-        left.x_end = blockshead1.x - gun_range - 15
-        left.y_end = blockshead1.y -15
-
-        right.x_start = 5 + blockshead1.x
-        right.y_start = 0 + blockshead1.y
-        right.x_end = gun_range + 5 + blockshead1.x
-        right.y_end = 1 + blockshead1.y
-
-        if self.direction == 1: # what direction blockshead is fact 1=up 2=down etc.
-            blockshead1.shoot_coords(up.x_start,up.y_start,up.x_end,up.y_end)
-        elif self.direction == 2:
-            blockshead1.shoot_coords(down.x_start,down.y_start,down.x_end,down.y_end)
-        elif self.direction == 3:
-            blockshead1.shoot_coords(left.x_start,left.y_start,left.x_end,left.y_end)
-        elif self.direction == 4:
-            blockshead1.shoot_coords(right.x_start,right.y_start,right.x_end,right.y_end)
-
     def update_sprite(self, game_config):
         """Change Blockshead's image based on the direction he is moving"""
         if self.direction == 1:
@@ -191,9 +152,9 @@ class Blockshead(object):
         elif self.direction == 4:
             game_config.canvas.itemconfigure(self.image, image = self.image_right)
 
-    def fire_gun(self):
+    def fire_gun(self, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
-        global blood_marks,Blood_Dict
+        global blood_marks,blood_dict
         self.bonus_score = 0
         Dead_Zombie_List = []
         which_zombie = 0
@@ -202,10 +163,16 @@ class Blockshead(object):
         kill_devil = []
 
         if self.gun == "Pistol":
+            self.shoot_x_start = int(np.sign(self.x_vel) * 20) + self.x
+            self.shoot_x_end = int(np.sign(self.x_vel) * 200) + self.x
+            self.shoot_y_start = int(np.sign(self.y_vel) * 20) + self.y
+            self.shoot_y_end = int(np.sign(self.y_vel) * 200) + self.y
             bullet_image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end+1,self.shoot_y_end+1,fill="Black") # create the bullet
             self.bullet_images.append((bullet_image, 5))
             canvas.update()
-            for Each_Zombie, Zombie in Zombie_Dict.items():
+
+            # Calculate damage inflicted on regular zombies
+            for Each_Zombie, Zombie in game_state.Zombie_Dict.items():
                 if self.direction == 1:
                     if Zombie.y < self.shoot_y_start and Zombie.y > self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
                         kill_list.append(Each_Zombie)
@@ -219,7 +186,8 @@ class Blockshead(object):
                     if Zombie.x > self.shoot_x_start and Zombie.x < self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
                         kill_list.append(Each_Zombie)
 
-            for each_devil, Zombie in Devil_Dict.items():
+            # Calculate damage inflicted on devils
+            for each_devil, Zombie in game_state.Devil_Dict.items():
                 if self.direction == 1:
                     if Zombie.y < self.shoot_y_start and Zombie.y > self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
                         Zombie.health -= 26 # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
@@ -237,35 +205,28 @@ class Blockshead(object):
                         Zombie.health -= 26
                         kill_devil.append(each_devil)
 
-            for Each_Zombie in kill_list: # Destroy the Zombie to be killed from the Zombie_Dict and canvas
-                mark = Blood(Zombie_Dict[Each_Zombie].x,Zombie_Dict[Each_Zombie].y)
-                Blood_Dict[blood_marks] = mark
-                blood_marks +=1
-                canvas.delete(Zombie_Dict[Each_Zombie])
-                del Zombie_Dict[Each_Zombie]
-                blockshead1.score+=1
+            for zombie_ix in kill_list: # Destroy the Zombie to be killed from the Zombie_Dict and canvas
+                zombie = game_state.Zombie_Dict[zombie_ix]
+                mark = Blood(zombie.x, zombie.y,game_config)
+                game_state.blood_dict[game_state.blood_marks] = mark
+                game_state.blood_marks +=1
+                canvas.delete(zombie)
+                del game_state.Zombie_Dict[zombie_ix]
+                game_state.blockshead.score+=1
                 self.bonus_score +=1
 
-            for the_devil in kill_devil:
-                mark = Blood(Devil_Dict[the_devil].x,Devil_Dict[the_devil].y)
-                Blood_Dict[blood_marks] = mark
-                blood_marks +=1
-                if Devil_Dict[the_devil].health <= 0:
-                    canvas.delete(Devil_Dict[the_devil])
-                    del Devil_Dict[the_devil]
-                    blockshead1.score+=1
+            for devil_ix in kill_devil:
+                devil = game_state.Devil_Dict[devil_ix]
+                mark = Blood(devil.x, devil.y,game_config)
+                game_state.blood_dict[game_state.blood_marks] = mark
+                game_state.blood_marks +=1
+                if game_state.Devil_Dict[devil_ix].health <= 0:
+                    game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
+                    del game_state.Devil_Dict[devil_ix]
+                    game_state.blockshead.score+=1
                     self.bonus_score +=1
 
-
             self.score += (self.bonus_score / 3)
-
-        if self.gun == 'Mines': # lay a mine and give it mine.x = blockshead1.x and mine.y = blockshead1.y
-            global number_of_mines
-            if self.mine_count > 0:
-                mine = MINE(self.x,self.y)
-                Mines_Dict[number_of_mines] = mine
-                number_of_mines +=1
-                self.mine_count -=1
 
         canvas.update()
 
@@ -299,9 +260,9 @@ class Blockshead(object):
             self.y_vel = 0
             self.direction = 4
         elif key == 'space':
-            self.fire_gun()
+            self.fire_gun(game_config, game_state)
         elif key == 'p':
-            pause_game = pause(pause_game, canvas, pausescreen)
+            pause_game = pause(game_state.pause_game, canvas, pausescreen)
         elif key == 'i':
             self.gun = "Pistol"
             self.ammo = 'Infinte'
@@ -321,6 +282,44 @@ class Blockshead(object):
         self.shoot_y_start = y_start
         self.shoot_x_end = x_end
         self.shoot_y_end = y_end
+
+def update_shot_coords(game_state):
+    """update the coordinates of where the gun should be fired from"""
+    if self.gun == "Pistol" or self.gun == 'Mines':
+        gun_range = self.pistol_range
+
+    blockshead = game_state.blockshead
+    shots = game_state.shots
+
+    for shot in shots:
+        up.x_start = 10 + blockshead.x
+        up.y_start = -5 + blockshead.y
+        up.x_end = 11 + blockshead.x
+        up.y_end = blockshead.y - (gun_range + 5)
+
+        down.x_start = blockshead.x - 10
+        down.y_start = 5 + blockshead.y
+        down.x_end = blockshead.x - 9
+        down.y_end = gun_range+5 + blockshead.y
+
+        left.x_start = 15 + blockshead.x
+        left.y_start = blockshead.y - 15
+        left.x_end = blockshead.x - gun_range - 15
+        left.y_end = blockshead.y -15
+
+        right.x_start = 5 + blockshead.x
+        right.y_start = 0 + blockshead.y
+        right.x_end = gun_range + 5 + blockshead.x
+        right.y_end = 1 + blockshead.y
+
+    if self.direction == 1: # what direction blockshead is fact 1=up 2=down etc.
+        blockshead1.shoot_coords(up.x_start,up.y_start,up.x_end,up.y_end)
+    elif self.direction == 2:
+        blockshead1.shoot_coords(down.x_start,down.y_start,down.x_end,down.y_end)
+    elif self.direction == 3:
+        blockshead1.shoot_coords(left.x_start,left.y_start,left.x_end,left.y_end)
+    elif self.direction == 4:
+        blockshead1.shoot_coords(right.x_start,right.y_start,right.x_end,right.y_end)
 
 class Zombie(object):
     """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
@@ -388,7 +387,7 @@ class Zombie(object):
         elif self.y_vel > 0:
             direction += "down"
 
-        canvas.itemconfigure(self.zombie, image = self.images[direction])
+        canvas.itemconfigure(self.zombie, image = self.images.get(direction, self.images["up"]))
 
     def contact(self, target):
         """This is how the Zombies do damage to Blockshead. If they com in contact with Blockshead it deducts health from blockshead"""
