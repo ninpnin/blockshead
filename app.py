@@ -25,14 +25,14 @@ def initialize_game():
     init_state = InitState()
     game_config = GameConfig(canvas=canvas)
     game_state = GameState()
-    game_state.blockshead = Blockshead()
+    game_state.blockshead = Blockshead(window, game_config)
 
     canvas.create_rectangle(0,0,(window.x_buffer),(window.y_buffer+window.height), fill="Black") # create all of the buffer images
     canvas.create_rectangle((window.x_buffer+window.width),0,(window.width-(window.x_buffer)),((2*window.y_buffer)+window.height), fill="Black")
     canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
     canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
 
-    return game_config, init_state, game_state
+    return game_config, init_state, game_state, window
 
 def pause(toggle, canvas, screen):
     toggle = not toggle
@@ -103,14 +103,14 @@ class Stats(object):
 class Blockshead(object):
     """The Blockshead charecter. Shoot, move, lay mines etc. are all contianed within the Blockshead class. Eventually all of the gun details need to be moved to thier own class so that Pistol = Gun(range,damage) and Mine = Gun(radius, damage)
     eventually even Shotgun = Gun(range,damange,arc_width) and so on"""
-    def __init__(self):
+    def __init__(self, window, game_config):
         self.image_up = PhotoImage(file = "images/blockshead/bhup.png") # The image changes if Blockshead is facing up down left right
         self.image_down = PhotoImage(file = "images/blockshead/bhdown.png")
         self.image_left = PhotoImage(file = "images/blockshead/bhleft.png")
         self.image_right = PhotoImage(file = "images/blockshead/bhright.png")
-        self.x = random.randrange(((game_limit.x_start/2)+15),game_limit.x_end) # pick a random starting point on the right side of the field. Zombies start on the left half.
-        self.y = random.randrange(game_limit.y_start,game_limit.y_end)
-        self.image = canvas.create_image(self.x,self.y,image = self.image_up)
+        self.x = random.randrange(((window.x_start/2)+15),window.x_end) # pick a random starting point on the right side of the field. Zombies start on the left half.
+        self.y = random.randrange(window.y_start,window.y_end)
+        self.image = game_config.canvas.create_image(self.x,self.y,image = self.image_up)
         self.x_vel = 0
         self.y_vel = 0
         self.direction = 1
@@ -125,16 +125,15 @@ class Blockshead(object):
         self.mine_count = 0 # how many mines are left
         self.bullet_images = []
 
-    def move(self):
-        global move
-        if (self.x >= game_limit.x_end) and self.x_vel > 0: # Can blockshead move in that direction or will he strike the edge of the game
+    def move(self, window, canvas):
+        if (self.x >= window.x_end) and self.x_vel > 0: # Can blockshead move in that direction or will he strike the edge of the game
             self.x_vel = 0
-        elif self.x <= game_limit.x_start and self.x_vel < 0:
+        elif self.x <= window.x_start and self.x_vel < 0:
             self.x_vel = 0
 
-        if (self.y >= game_limit.y_end) and self.y_vel > 0:
+        if (self.y >= window.y_end) and self.y_vel > 0:
             self.y_vel = 0
-        elif self.y <= game_limit.y_start and self.y_vel < 0:
+        elif self.y <= window.y_start and self.y_vel < 0:
             self.y_vel = 0
 
         self.x += self.x_vel
@@ -180,16 +179,16 @@ class Blockshead(object):
         elif self.direction == 4:
             blockshead1.shoot_coords(right.x_start,right.y_start,right.x_end,right.y_end)
 
-    def update_sprite(self):
+    def update_sprite(self, game_config):
         """Change Blockshead's image based on the direction he is moving"""
         if self.direction == 1:
-            canvas.itemconfigure(self.image, image = self.image_up)
+            game_config.canvas.itemconfigure(self.image, image = self.image_up)
         elif self.direction == 2:
-            canvas.itemconfigure(self.image, image = self.image_down)
+            game_config.canvas.itemconfigure(self.image, image = self.image_down)
         elif self.direction == 3:
-            canvas.itemconfigure(self.image, image = self.image_left)
+            game_config.canvas.itemconfigure(self.image, image = self.image_left)
         elif self.direction == 4:
-            canvas.itemconfigure(self.image, image = self.image_right)
+            game_config.canvas.itemconfigure(self.image, image = self.image_right)
 
     def fire_gun(self):
         """Fires whichever weapon that blockshead is using at the moment"""
@@ -278,9 +277,10 @@ class Blockshead(object):
             else:
                 self.bullet_images[ix] = bullet_image, lifetime - 1
 
-    def key(self,key):
+    def key(self, key, game_config):
         """Look at the input from the keyboard and adjust Blockshead accordingly. Movement = WASD Fire = Space Pistol = I Mines = U Pause = P Unpause = O"""
         global press,pause_game,pausescreen
+        B_move_length = game_config.B_move_length
         if key == 'w':
             self.x_vel = 0
             self.y_vel = -B_move_length
@@ -328,8 +328,8 @@ class Zombie(object):
         for direction in ["up", "down", "right", "left", "rightdown", "rightup", "leftup", "leftdown"]:
             self.images[direction] = PhotoImage(file = "images/zombies/z{}.png".format(direction)) # the 8 Devil images
 
-        self.x = random.randrange(game_limit.x_start,(game_limit.x_end-(game_limit.x_end / 2))) # create Zombies in the left half of the arena
-        self.y = random.randrange(game_limit.y_start,game_limit.y_end)
+        self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2))) # create Zombies in the left half of the arena
+        self.y = random.randrange(window.y_start,window.y_end)
         self.direction = 1
         self.zombie = canvas.create_image(self.x,self.y, image = self.zup)
         self.alive = True
@@ -404,8 +404,8 @@ class Zombie(object):
 class Devil(object):
     """The Devil Class. They move faster than Zombies have more health and can attack Blockshead by colliding with him or by shooting him"""
     def __init__(self):
-        self.x = random.randrange(game_limit.x_start,(game_limit.x_end-(game_limit.x_end / 2)))
-        self.y = random.randrange(game_limit.y_start,game_limit.y_end)
+        self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2)))
+        self.y = random.randrange(window.y_start,window.y_end)
         self.direction = 1
         self.alive = True
         self.distance_to_b = 0
@@ -521,26 +521,25 @@ def end_game(score, level):
     print(text)
 
 # TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
-def key_press(event):
-    global pause_game
+def key_press(event, game_config, init_state, game_state, window):
     press = event.keysym
     if press == "g":
-        startgame()
+        startgame(game_config, init_state, game_state, window)
     else:
-        blockshead1.key(press)
+        game_state.blockshead.key(press, game_config)
 
-def key_release(event):
+def key_release(event, game_state):
     release = event.keysym
-    blockshead1.keyup(release)
+    game_state.blockshead.keyup(release)
 
-def main_loop(game_config, init_state, game_state):
+def main_loop(game_config, init_state, game_state, window):
     if not init_state.game_started:
         init_state.game_started = True
 
     if game_state.blockshead.health <= 0:
         end_game(game_state.blockshead.score, game_state.blockshead.level - 1)
     else:
-        if not pause_game:
+        if not game_state.pause_game:
             destroy = []
             for zombie in game_state.Zombie_Dict.values():
                 zombie.move(game_state.blockshead)
@@ -552,40 +551,36 @@ def main_loop(game_config, init_state, game_state):
                 devil.update_sprite()
                 devil.contact(game_state.blockshead)
 
-            for attack_name, attack in list(Devil_Attack_Dict.items()):
+            for attack_name, attack in game_state.Devil_Attack_Dict.items():
                 attack.move()
                 if attack.life_span <= 0:
                     canvas.delete(attack.attack)
                     del Devil_Attack_Dict[attack_name]
 
-            for mine, _ in list(Mines_Dict.items()):
-                Mines_Dict[mine].explode()
-                if Mines_Dict[mine].destroy:
-                    canvas.delete(Mines_Dict[mine].image)
-                    del Mines_Dict[mine]
-
-            blockshead1.move()
-            blockshead1.update_shots()
-            blockshead1.update_sprite()
-            blockshead1.update_shot_coords()
-            score_board.update()
+            game_state.blockshead.move(window, game_config.canvas)
+            #game_state.blockshead.update_shots()
+            game_state.blockshead.update_sprite(game_config)
+            #game_state.blockshead.update_shot_coords()
+            #score_board.update()
+        else:
+            pass
 
         # Move to the next level if there are no enemies left
-        New_Level = len(Zombie_Dict) == 0 and len(Devil_Dict) == 0
+        New_Level = len(game_state.Zombie_Dict) == 0 and len(game_state.Devil_Dict) == 0
 
         canvas.update()
-        canvas.after(5, main_loop)
+        canvas.after(5, lambda: main_loop(game_config, init_state, game_state, window))
 
-def startgame():
+def startgame(game_config, init_state, game_state, window):
     print("startgame")
-    game_config.canvas.after(30, lambda: main_loop(game_config, init_state, game_state))
-    game_config.canvas.bind("<KeyRelease>", lambda event: key_release(event))
+    game_config.canvas.after(30, lambda: main_loop(game_config, init_state, game_state, window))
+    game_config.canvas.bind("<KeyRelease>", lambda event: key_release(event, game_state))
 
 if __name__ == "__main__":
-    game_config, init_state, game_state = initialize_game()
+    game_config, init_state, game_state, window = initialize_game()
     canvas = game_config.canvas
     canvas.bind("<1>", lambda event: canvas.focus_set())
-    canvas.bind("<Key>", lambda event: key_press(event))
+    canvas.bind("<Key>", lambda event: key_press(event, game_config, init_state, game_state, window))
 
     canvas.pack()
     canvas.mainloop()
