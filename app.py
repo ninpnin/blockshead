@@ -5,6 +5,7 @@ import time
 import math
 from math import ceil
 from blockshead.gamestate import *
+import numpy as np
 
 def initialize_game():
     window = WindowProperties(height=750, width=1000, x_buffer=40, y_buffer=40)
@@ -359,22 +360,13 @@ class Zombie(object):
                 collision = True
 
         if not collision:
-            if self.x < target.x:
-                self.x_vel = game_config.Zombie_per_move
-            if self.x > target.x:
-                self.x_vel= -game_config.Zombie_per_move
-            elif self.x == target.x:
-                self.x_vel = 0
+            self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
+            self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
+
             if self.x >= window.width - 25: # x coords
                 self.x_vel = -game_config.Zombie_per_move
             if self.x <= 0 + 5:
                 self.x_vel = game_config.Zombie_per_move
-            if self.y < target.y:
-                self.y_vel = game_config.Zombie_per_move
-            if self.y > target.y:
-                self.y_vel = -game_config.Zombie_per_move
-            elif self.y == target.y:
-                self.y_vel = 0
             if self.y >= window.height - 25:# y coords
                 self.y_vel = -game_config.Zombie_per_move
             if self.y <= 0 + 5:
@@ -386,22 +378,17 @@ class Zombie(object):
     # TODO: rename to draw
     def update_sprite(self):
         """Update the Zombie image based on which of the 8 directions that it is traveling in"""
-        if self.y_vel < 0 and self.x_vel == 0:
-            canvas.itemconfigure(self.zombie, image = self.images["up"])
-        if self.y_vel > 0 and self.x_vel == 0:
-            canvas.itemconfigure(self.zombie, image = self.images["down"])
-        if self.x_vel < 0 and self.y_vel == 0:
-            canvas.itemconfigure(self.zombie, image = self.images["left"])
-        if self.x_vel > 0 and self.y_vel == 0:
-            canvas.itemconfigure(self.zombie, image = self.images["right"])
-        if self.y_vel > 0 and self.x_vel > 0:
-            canvas.itemconfigure(self.zombie, image = self.images["rightdown"])
-        if self.y_vel < 0 and self.x_vel > 0:
-            canvas.itemconfigure(self.zombie, image = self.images["rightup"])
-        if self.y_vel > 0 and self.x_vel < 0:
-            canvas.itemconfigure(self.zombie, image = self.images["leftdown"])
-        if self.y_vel < 0 and self.x_vel < 0:
-            canvas.itemconfigure(self.zombie, image = self.images["leftup"])
+        direction = ""
+        if self.x_vel < 0:
+            direction += "left"
+        elif self.x_vel > 0:
+            direction += "right"
+        if self.y_vel < 0:
+            direction += "up"
+        elif self.y_vel > 0:
+            direction += "down"
+
+        canvas.itemconfigure(self.zombie, image = self.images[direction])
 
     def contact(self, target):
         """This is how the Zombies do damage to Blockshead. If they com in contact with Blockshead it deducts health from blockshead"""
@@ -441,14 +428,11 @@ class Devil(object):
                 collision = True
 
         if not collision:
-            if self.x < target.x:
-                self.x_vel = game_config.Devil_move
-            if self.x > target.x:
-                self.x_vel= -game_config.Devil_move
-            elif self.x == target.x:
-                self.x_vel = 0
+            self.x_vel = - game_config.Devil_move * np.sign(self.x - target.x)
+            self.y_vel = - game_config.Devil_move * np.sign(self.y - target.y)
+
             if self.x >= window.width - 25: # x coords
-                self.x_vel = -game_config.Devil_move
+                self.x_vel = - game_config.Devil_move
             if self.x <= 0 + 5:
                 self.x_vel = game_config.Devil_move
             if self.y < target.y:
@@ -466,23 +450,18 @@ class Devil(object):
             canvas.coords(self.devil,(self.x),(self.y))
 
     def update_sprite(self):
-        """update the image"""
-        if self.y_vel < 0 and self.x_vel == 0:
-            canvas.itemconfigure(self.devil, image = self.images["up"])
-        if self.y_vel > 0 and self.x_vel == 0:
-            canvas.itemconfigure(self.devil, image = self.images["down"])
-        if self.x_vel < 0 and self.y_vel == 0:
-            canvas.itemconfigure(self.devil, image = self.images["left"])
-        if self.x_vel > 0 and self.y_vel == 0:
-            canvas.itemconfigure(self.devil, image = self.images["right"])
-        if self.y_vel > 0 and self.x_vel > 0:
-            canvas.itemconfigure(self.devil, image = self.images["rightdown"])
-        if self.y_vel < 0 and self.x_vel > 0:
-            canvas.itemconfigure(self.devil, image = self.images["rightup"])
-        if self.y_vel > 0 and self.x_vel < 0:
-            canvas.itemconfigure(self.devil, image = self.images["leftdown"])
-        if self.y_vel < 0 and self.x_vel < 0:
-            canvas.itemconfigure(self.devil, image = self.images["leftup"])
+        """Update the Zombie image based on which of the 8 directions that it is traveling in"""
+        direction = ""
+        if self.x_vel < 0:
+            direction += "left"
+        elif self.x_vel > 0:
+            direction += "right"
+        if self.y_vel < 0:
+            direction += "up"
+        elif self.y_vel > 0:
+            direction += "down"
+
+        canvas.itemconfigure(self.devil, image = self.images[direction])
 
     def contact(self, target):
         """If a Devil comes in contact with blockshead it deducts more health than a Zombie would"""
