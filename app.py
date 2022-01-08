@@ -283,44 +283,6 @@ class Blockshead(object):
         self.shoot_x_end = x_end
         self.shoot_y_end = y_end
 
-def update_shot_coords(game_state):
-    """update the coordinates of where the gun should be fired from"""
-    if self.gun == "Pistol" or self.gun == 'Mines':
-        gun_range = self.pistol_range
-
-    blockshead = game_state.blockshead
-    shots = game_state.shots
-
-    for shot in shots:
-        up.x_start = 10 + blockshead.x
-        up.y_start = -5 + blockshead.y
-        up.x_end = 11 + blockshead.x
-        up.y_end = blockshead.y - (gun_range + 5)
-
-        down.x_start = blockshead.x - 10
-        down.y_start = 5 + blockshead.y
-        down.x_end = blockshead.x - 9
-        down.y_end = gun_range+5 + blockshead.y
-
-        left.x_start = 15 + blockshead.x
-        left.y_start = blockshead.y - 15
-        left.x_end = blockshead.x - gun_range - 15
-        left.y_end = blockshead.y -15
-
-        right.x_start = 5 + blockshead.x
-        right.y_start = 0 + blockshead.y
-        right.x_end = gun_range + 5 + blockshead.x
-        right.y_end = 1 + blockshead.y
-
-    if self.direction == 1: # what direction blockshead is fact 1=up 2=down etc.
-        blockshead1.shoot_coords(up.x_start,up.y_start,up.x_end,up.y_end)
-    elif self.direction == 2:
-        blockshead1.shoot_coords(down.x_start,down.y_start,down.x_end,down.y_end)
-    elif self.direction == 3:
-        blockshead1.shoot_coords(left.x_start,left.y_start,left.x_end,left.y_end)
-    elif self.direction == 4:
-        blockshead1.shoot_coords(right.x_start,right.y_start,right.x_end,right.y_end)
-
 class Zombie(object):
     """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
     def __init__(self):
