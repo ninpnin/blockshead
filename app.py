@@ -163,7 +163,10 @@ class Blockshead(object):
 
         #pistol_shot = Pistol(game_config, game_state)
         #game_state.shots.add(pistol_shot)
-        shot = Fireball(game_config, game_state)
+        if self.gun == "Pistol":
+            shot = Pistol(game_config, game_state)
+        elif self.gun == "Fireball":
+            shot = Fireball(game_config, game_state)
         game_state.shots.add(shot)
 
     def update_shots(self, game_config, game_state):
@@ -223,12 +226,12 @@ class Blockshead(object):
             self.fire_gun(game_config, game_state)
         elif key == 'p':
             pause_game = pause(game_state.pause_game, canvas, pausescreen)
-        elif key == 'i':
+        elif key == '1':
             self.gun = "Pistol"
             self.ammo = 'Infinte'
-        elif key == 'u':
-            self.gun = 'Mines'
-            self.ammo = self.mine_count
+        elif key == '2':
+            self.gun = 'Fireball'
+            self.ammo = 'Infinite'
 
     def keyup(self, key):
         if key in ['w', 's']:
