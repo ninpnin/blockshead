@@ -85,7 +85,7 @@ class Fireball:
         self.y_vel = int(np.sign(blockshead.y_vel)) * 5
 
         self.direction = blockshead.direction
-        self.image = PhotoImage(file = "images/game_elements/devil_a_old.png")
+        self.image = PhotoImage(file = "images/game_elements/fireball_small.png")
         self.attack = canvas.create_image(self.x,self.y,image = self.image)
 
     def on_canvas(self):
@@ -101,7 +101,8 @@ class Fireball:
         print("Delete fireball...")
         game_config.canvas.delete(self.attack)
         game_config.canvas.update()
-        game_state.shots.remove(self)
+        if self in game_state.shots:
+            game_state.shots.remove(self)
 
     def update(self, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
