@@ -40,6 +40,7 @@ class GameState:
 
     pause_game = False
 
+    shots = set()
     Mines_Dict = {} # holds all of the mines
     Zombie_Dict = {} # Where the Zombies are kept - elements are deleted as Blockshead shoots them
     Devil_Dict = {} # same as Zombie_Dict but for Devils

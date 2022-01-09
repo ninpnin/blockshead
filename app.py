@@ -5,6 +5,7 @@ import time
 import math
 from math import ceil
 from blockshead.gamestate import *
+from blockshead.weapons import *
 import numpy as np
 
 def initialize_game():
@@ -51,7 +52,6 @@ class Blood(object):
     """What happens when you kill something. It create a blood spot on the coordinates of the killed Zombie(s) / Devil(s)
     They are deleted at the beginning of each new level"""
     def __init__(self,x,y, game_config):
-        print("Blood?")
         self.image = PhotoImage(file = "images/game_elements/blood.png")
         self.blood_spot = game_config.canvas.create_image(x,y,image = self.image)
         game_config.canvas.tag_lower(self.blood_spot)
@@ -161,84 +161,43 @@ class Blockshead(object):
         kill_list = [] # the librarys that hold which Zombie needs to be deleted from Zombie_Dict
         kill_devil = []
 
-        if self.gun == "Pistol":
-            self.shoot_x_start = int(np.sign(self.x_vel) * 20) + self.x
-            self.shoot_x_end = int(np.sign(self.x_vel) * 200) + self.x + 1
-            self.shoot_y_start = int(np.sign(self.y_vel) * 20) + self.y
-            self.shoot_y_end = int(np.sign(self.y_vel) * 200) + self.y + 1
-            bullet_image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end+1,self.shoot_y_end+1,fill="Black") # create the bullet
-            self.bullet_images.append((bullet_image, 5))
-            canvas.update()
+        #pistol_shot = Pistol(game_config, game_state)
+        #game_state.shots.add(pistol_shot)
+        shot = Fireball(game_config, game_state)
+        game_state.shots.add(shot)
 
-            # Calculate damage inflicted on regular zombies
-            for Each_Zombie, Zombie in game_state.Zombie_Dict.items():
-                if self.direction == 1:
-                    if Zombie.y < self.shoot_y_start and Zombie.y > self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                        kill_list.append(Each_Zombie)
-                elif self.direction == 2:
-                    if Zombie.y > self.shoot_y_start and Zombie.y < self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                        kill_list.append(Each_Zombie)
-                elif self.direction == 3:
-                    if Zombie.x < self.shoot_x_start and Zombie.x > self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                        kill_list.append(Each_Zombie)
-                elif self.direction == 4:
-                    if Zombie.x > self.shoot_x_start and Zombie.x < self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                        kill_list.append(Each_Zombie)
+    def update_shots(self, game_config, game_state):
+        kill_list, kill_devil = [], []
+        for shot in list(game_state.shots):
+            killed_zombies, killed_devils = shot.update(game_config, game_state)
+            kill_list, kill_devil = kill_list + killed_zombies, kill_devil + killed_devils
 
-            # Calculate damage inflicted on devils
-            for each_devil, Zombie in game_state.Devil_Dict.items():
-                if self.direction == 1:
-                    if Zombie.y < self.shoot_y_start and Zombie.y > self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                        Zombie.health -= 26 # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
-                        kill_devil.append(each_devil)
-                elif self.direction == 2:
-                    if Zombie.y > self.shoot_y_start and Zombie.y < self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                        Zombie.health -= 26
-                        kill_devil.append(each_devil)
-                elif self.direction == 3:
-                    if Zombie.x < self.shoot_x_start and Zombie.x > self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                        Zombie.health -= 26
-                        kill_devil.append(each_devil)
-                elif self.direction == 4:
-                    if Zombie.x > self.shoot_x_start and Zombie.x < self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                        Zombie.health -= 26
-                        kill_devil.append(each_devil)
+        # Kill the zombies that have run out of health
+        for zombie_ix in kill_list:
+            zombie = game_state.Zombie_Dict[zombie_ix]
+            mark = Blood(zombie.x, zombie.y,game_config)
+            game_state.blood_dict[game_state.blood_marks] = mark
+            game_state.blood_marks +=1
+            canvas.delete(zombie)
+            del game_state.Zombie_Dict[zombie_ix]
+            game_state.blockshead.score+=1
+            self.bonus_score +=1
 
-            # Kill the zombies that have run out of health
-            for zombie_ix in kill_list:
-                zombie = game_state.Zombie_Dict[zombie_ix]
-                mark = Blood(zombie.x, zombie.y,game_config)
-                game_state.blood_dict[game_state.blood_marks] = mark
-                game_state.blood_marks +=1
-                canvas.delete(zombie)
-                del game_state.Zombie_Dict[zombie_ix]
+        # Kill the devils that have run out of health
+        for devil_ix in kill_devil:
+            devil = game_state.Devil_Dict[devil_ix]
+            mark = Blood(devil.x, devil.y,game_config)
+            game_state.blood_dict[game_state.blood_marks] = mark
+            game_state.blood_marks +=1
+            if game_state.Devil_Dict[devil_ix].health <= 0:
+                game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
+                del game_state.Devil_Dict[devil_ix]
                 game_state.blockshead.score+=1
                 self.bonus_score +=1
-
-            # Kill the devils that have run out of health
-            for devil_ix in kill_devil:
-                devil = game_state.Devil_Dict[devil_ix]
-                mark = Blood(devil.x, devil.y,game_config)
-                game_state.blood_dict[game_state.blood_marks] = mark
-                game_state.blood_marks +=1
-                if game_state.Devil_Dict[devil_ix].health <= 0:
-                    game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
-                    del game_state.Devil_Dict[devil_ix]
-                    game_state.blockshead.score+=1
-                    self.bonus_score +=1
 
             self.score += (self.bonus_score / 3)
 
         canvas.update()
-
-    def update_shots(self, game_config):
-        for ix, bullet_image_tuple in enumerate(self.bullet_images):
-            bullet_image, lifetime = bullet_image_tuple
-            if lifetime < 0:
-                game_config.canvas.delete(bullet_image)
-                self.bullet_images.pop(ix)
-            else:
-                self.bullet_images[ix] = bullet_image, lifetime - 1
 
     def key(self, key, game_config):
         """Look at the input from the keyboard and adjust Blockshead accordingly. Movement = WASD Fire = Space Pistol = I Mines = U Pause = P Unpause = O"""
@@ -514,7 +473,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
                     del game_state.Devil_Attack_Dict[attack_name]
 
             game_state.blockshead.move(window, game_config.canvas)
-            game_state.blockshead.update_shots(game_config)
+            game_state.blockshead.update_shots(game_config, game_state)
             game_state.blockshead.update_sprite(game_config)
             #game_state.blockshead.update_shot_coords()
             game_state.stats.update(game_config, game_state)
