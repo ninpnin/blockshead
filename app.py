@@ -18,10 +18,10 @@ def initialize_game():
     canvas.master.title("Blockshead")
     canvas.pack()
     background = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", belowThis=None)
-    pic = PhotoImage(width=window.width, height=window.height)
-    canvas.create_image(0,0,image=pic,anchor=NW)
-    pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
-    print("Pausescreen", pausescreen)
+    
+    # TODO: fix pause screen
+    # pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
+    # print("Pausescreen", pausescreen)
 
     init_state = InitState()
     game_config = GameConfig(canvas=canvas)
@@ -51,6 +51,7 @@ class Blood(object):
     """What happens when you kill something. It create a blood spot on the coordinates of the killed Zombie(s) / Devil(s)
     They are deleted at the beginning of each new level"""
     def __init__(self,x,y, game_config):
+        print("Blood?")
         self.image = PhotoImage(file = "images/game_elements/blood.png")
         self.blood_spot = game_config.canvas.create_image(x,y,image = self.image)
         game_config.canvas.tag_lower(self.blood_spot)
@@ -203,7 +204,8 @@ class Blockshead(object):
                         Zombie.health -= 26
                         kill_devil.append(each_devil)
 
-            for zombie_ix in kill_list: # Destroy the Zombie to be killed from the Zombie_Dict and canvas
+            # Kill the zombies that have run out of health
+            for zombie_ix in kill_list:
                 zombie = game_state.Zombie_Dict[zombie_ix]
                 mark = Blood(zombie.x, zombie.y,game_config)
                 game_state.blood_dict[game_state.blood_marks] = mark
@@ -213,6 +215,7 @@ class Blockshead(object):
                 game_state.blockshead.score+=1
                 self.bonus_score +=1
 
+            # Kill the devils that have run out of health
             for devil_ix in kill_devil:
                 devil = game_state.Devil_Dict[devil_ix]
                 mark = Blood(devil.x, devil.y,game_config)
@@ -285,13 +288,14 @@ class Zombie(object):
     """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
     def __init__(self):
         self.directions = ["up", "down", "right", "left", "rightdown", "rightup", "leftup", "leftdown"]
+        self.direction = self.directions[0]
         self.images = {}
         for direction in self.directions:
             self.images[direction] = PhotoImage(file = "images/zombies/z{}.png".format(direction)) # the 8 Devil images
 
         self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2))) # create Zombies in the left half of the arena
         self.y = random.randrange(window.y_start,window.y_end)
-        self.direction = 1
+        
         self.zombie = canvas.create_image(self.x,self.y, image = self.images["up"])
         self.alive = True
         self.distance_to_b = 0
@@ -346,8 +350,10 @@ class Zombie(object):
             direction += "up"
         elif self.y_vel > 0:
             direction += "down"
+        if direction != "":
+            self.direction = direction
 
-        canvas.itemconfigure(self.zombie, image = self.images.get(direction, self.images["up"]))
+        canvas.itemconfigure(self.zombie, image = self.images.get(direction, self.images[self.direction]))
 
     def contact(self, target):
         """This is how the Zombies do damage to Blockshead. If they com in contact with Blockshead it deducts health from blockshead"""
@@ -360,15 +366,16 @@ class Devil(object):
     def __init__(self):
         self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2)))
         self.y = random.randrange(window.y_start,window.y_end)
-        self.direction = 1
+        self.directions = ["up", "down", "right", "left", "rightdown", "rightup", "leftup", "leftdown"]
+        self.direction = self.directions[0]
         self.alive = True
         self.distance_to_b = 0
         self.attacked = False
         self.attack_fire = 0
         self.health = 100
         self.images = {}
-        for direction in ["up", "down", "right", "left", "rightdown", "rightup", "leftup", "leftdown"]:
-            self.images[direction] = PhotoImage(file = "images/devils/d{}.png".format(direction)) # the 8 Devil images
+        for direction in self.directions:
+            self.images[direction] = PhotoImage(file = "images/devils/d{}.png".format(direction))
 
         self.devil = canvas.create_image(self.x,self.y, image = self.images["up"])
 
@@ -420,7 +427,10 @@ class Devil(object):
         elif self.y_vel > 0:
             direction += "down"
 
-        canvas.itemconfigure(self.devil, image = self.images[direction])
+        if direction == "":
+            direction = "up"
+
+        canvas.itemconfigure(self.devil, image = self.images[self.direction])
 
     def contact(self, target):
         """If a Devil comes in contact with blockshead it deducts more health than a Zombie would"""
