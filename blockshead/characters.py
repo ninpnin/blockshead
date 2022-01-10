@@ -126,7 +126,7 @@ class Blockshead(object):
             self.fire_gun(game_config, game_state)
         elif key == '1':
             self.gun = "Pistol"
-            self.ammo = 'Infinte'
+            self.ammo = 'Infinite'
         elif key == '2':
             self.gun = 'Fireball'
             self.ammo = 'Infinite'
@@ -156,7 +156,7 @@ class Zombie(object):
         self.y = random.randrange(window.y_start,window.y_end)
         
         self.zombie = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
-        self.attacked = False
+        self.cooldown = 0
 
     def move(self, target, window, game_config, game_state):
         """
@@ -194,6 +194,8 @@ class Zombie(object):
             self.y += self.y_vel
             self.x += self.x_vel
              # move the Zombie accordingly based on if it should move or another Zombie is in its path
+        if self.cooldown > 0:
+            self.cooldown -= 1
 
     # TODO: rename to draw
     def update_sprite(self, game_config):
@@ -217,9 +219,9 @@ class Zombie(object):
 
     def contact(self, target):
         """This is how the Zombies do damage to Blockshead. If they com in contact with Blockshead it deducts health from blockshead"""
-        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.attacked == False:
+        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.cooldown == 0:
             target.health -= 1
-            self.attacked = True
+            self.cooldown = 5
 
 class Devil(object):
     """The Devil Class. They move faster than Zombies have more health and can attack Blockshead by colliding with him or by shooting him"""
@@ -227,7 +229,7 @@ class Devil(object):
         self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2)))
         self.y = random.randrange(window.y_start,window.y_end)
         self.direction = Direction.UP
-        self.attacked = False
+        self.cooldown = 0
         self.attack_fire = 0
         self.health = 100
         self.images = {}
@@ -270,6 +272,8 @@ class Devil(object):
                 self.y_vel = game_config.Devil_move
             self.y += self.y_vel
             self.x += self.x_vel
+        if self.cooldown > 0:
+            self.cooldown -= 1
 
     def update_sprite(self, game_config):
         """Update the Zombie image based on which of the 8 directions that it is traveling in"""
@@ -291,9 +295,9 @@ class Devil(object):
 
     def contact(self, target):
         """If a Devil comes in contact with blockshead it deducts more health than a Zombie would"""
-        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.attacked == False:
+        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.cooldown == 0:
             target.health -= 2
-            self.attacked = True
+            self.cooldown = 5
 
     def attack(self, target, game_config, game_state):
         """If the Devil is within +/- 200 pixels in the X and Y directions then it shoots a fireball at blockshead 1 time and then waits 45 loops to shoot agian"""
