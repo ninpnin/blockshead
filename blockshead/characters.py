@@ -15,6 +15,8 @@ class Blockshead(object):
         self.x = random.randrange(((window.x_start/2)+15),window.x_end) # pick a random starting point on the right side of the field. Zombies start on the left half.
         self.y = random.randrange(window.y_start,window.y_end)
         self.image = game_config.canvas.create_image(self.x,self.y,image = self.image_up)
+        self.healthbar_bg = game_config.canvas.create_rectangle(self.x + 20, self.y -55, self.x - 20, self.y - 60, fill="Red", belowThis=None)
+        self.healthbar = game_config.canvas.create_rectangle(self.x + 20, self.y -55, self.x - 20, self.y - 60, fill="Green", belowThis=None)
         self.x_vel = 0
         self.y_vel = 0
         self.direction = 1 # TODO: refactor to str or enum
@@ -54,6 +56,13 @@ class Blockshead(object):
         elif self.direction == 4:
             game_config.canvas.itemconfigure(self.image, image = self.image_right)
         game_config.canvas.coords(self.image,(self.x),(self.y))
+
+        # Health bar
+        width = int(40 * self.health / 100)
+        game_config.canvas.coords(self.healthbar,self.x -20 + width, self.y -55, self.x - 20, self.y - 60)
+        game_config.canvas.coords(self.healthbar_bg,self.x + 20, self.y -55, self.x - 20, self.y - 60)
+        game_config.canvas.tag_raise(self.healthbar_bg)
+        game_config.canvas.tag_raise(self.healthbar)
 
     def fire_gun(self, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""

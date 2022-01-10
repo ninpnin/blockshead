@@ -38,6 +38,10 @@ def initialize_game():
     canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
     canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
 
+    # Start screen
+    init_state.startscreen = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
+    init_state.starttext = canvas.create_text(window.width // 2, window.height // 2, text="Start game by pressing 'G'", fill="Black", font=game_config.font)
+
     # Pause screen
     game_config.pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
     game_config.pausetext = canvas.create_text(window.width // 2, window.height // 2, text="Paused", fill="Black", font=game_config.font)
@@ -50,6 +54,13 @@ def initialize_game():
 
     return game_config, init_state, game_state, window
 
+def startgame(game_config, init_state, game_state, window):
+    print("startgame")
+    game_config.canvas.delete(init_state.startscreen)
+    game_config.canvas.delete(init_state.starttext)
+    game_config.canvas.after(30, lambda: main_loop(game_config, init_state, game_state, window))
+    game_config.canvas.bind("<KeyRelease>", lambda event: key_release(event, game_state))
+
 def pause_game(game_config, game_state):
     if not game_state.paused:
         game_config.canvas.tag_raise(game_config.pausescreen)
@@ -61,6 +72,11 @@ def pause_game(game_config, game_state):
         game_config.canvas.itemconfigure(game_config.pausescreen, state='hidden')
         game_config.canvas.itemconfigure(game_config.pausetext, state='hidden')
         game_state.paused = False
+
+def end_game(window, game_config, game_state):
+    background = game_config.canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, aboveThis=None)
+    end_text = 'Game Over!\nFinal Score: {}, Final Level: {}'.format(ceil(game_state.score), game_state.level -1)
+    game_config.canvas.create_text(window.width // 2, window.height // 2, text=end_text, fill="Black", font=game_config.font)
 
 def update_stats(game_config, game_state):
     # Refactor to change text content instead of creating a new object
@@ -93,11 +109,6 @@ def new_level(game_config, game_state, window):
     
     print("New level:", game_state.level)
     return game_config, game_state
-
-def end_game(window, game_config, game_state):
-    background = game_config.canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, aboveThis=None)
-    end_text = 'Game Over! Final Score: {}, Final Level: {}'.format(ceil(game_state.score), game_state.level -1)
-    game_config.canvas.create_text(window.width // 2, window.height // 2, text=end_text, fill="Black", font=game_config.font)
 
 # TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
 def key_press(event, game_config, init_state, game_state, window):
@@ -152,11 +163,6 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
 
         canvas.update()
         canvas.after(5, lambda: main_loop(game_config, init_state, game_state, window, levelup))
-
-def startgame(game_config, init_state, game_state, window):
-    print("startgame")
-    game_config.canvas.after(30, lambda: main_loop(game_config, init_state, game_state, window))
-    game_config.canvas.bind("<KeyRelease>", lambda event: key_release(event, game_state))
 
 if __name__ == "__main__":
     game_config, init_state, game_state, window = initialize_game()
