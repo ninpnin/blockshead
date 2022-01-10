@@ -172,17 +172,38 @@ class Fireball:
 
         # Calculate damage inflicted on regular zombies
         for zombie_ix, Zombie in game_state.Zombie_Dict.items():
-            if abs(Zombie.x - self.x) < 10 and abs(Zombie.x - self.x) < 10:
+            if abs(Zombie.x - self.x) < 10 and abs(Zombie.y - self.y) < 10:
                 self.delete(game_config, game_state)
                 killed_zombies.append(zombie_ix)
                 return killed_zombies, killed_devils
 
         # Calculate damage inflicted on devils
         for devil_ix, Zombie in game_state.Devil_Dict.items():
-            if abs(Zombie.x - self.x) < 10 and abs(Zombie.x - self.x) < 10:
+            if abs(Zombie.x - self.x) < 10 and abs(Zombie.y - self.y) < 10:
                 Zombie.health -= 26 # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
                 self.delete(game_config, game_state)
                 killed_devils.append(devil_ix)
                 return killed_zombies, killed_devils
 
         return killed_zombies, killed_devils
+
+
+class Healthbox(object):
+    """Static object for drawing blood on the ground"""
+    def __init__(self, window, game_config):
+        print("Healthbox...")
+        self.x = random.randrange(window.x_start, window.x_end) # create Zombies in the left half of the arena
+        self.y = random.randrange(window.y_start, window.y_end)
+        print(self.x, self.y)
+        self.image = PhotoImage(file = "images/game_elements/healthbox.png")
+        self.image_ref = game_config.canvas.create_image(self.x, self.y, image=self.image)
+
+    def update(self, game_config, game_state):
+        """Fires whichever weapon that blockshead is using at the moment"""
+        canvas = game_config.canvas
+
+        if abs(game_state.blockshead.x - self.x) < 10 and abs(game_state.blockshead.y - self.y) < 10:
+            game_state.blockshead.health = min(100, game_state.blockshead.health + 25)
+            game_state.healthboxes.pop(game_state.healthboxes.index(self))
+            game_config.canvas.delete(self.image_ref)
+

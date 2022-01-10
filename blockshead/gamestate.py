@@ -49,7 +49,7 @@ class GameState:
     Dead_Zombie_List = []
     Devil_Attack_Dict = {} # The spheres that the Devils can attack with
     blood_dict = {}
-
+    healthboxes = []
     score: int = 0
     level: int = 1
 

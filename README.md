@@ -11,7 +11,7 @@ Simple 2D shooter game written in Python
   - [x] Simple opponent AI
   - [x] Pausing the game
   - [ ] Obstacles
-  - [ ] Health boxes
+  - [x] Health boxes
 - [ ] Weapons
   - [x] Pistol
   - [ ] Shotgun

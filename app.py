@@ -103,7 +103,9 @@ def new_level(game_config, game_state, window):
         game_state.Devil_Dict[build_devil] = D
         build_devil +=1
 
-    game_state.blockshead.health += 5 
+    hb = Healthbox(window, game_config)
+    game_state.healthboxes.append(hb)
+    game_state.blockshead.health = min(100, 5 + game_state.blockshead.health) 
     game_state.blockshead.mine_count += int(game_config.Number_of_Zombies / 5)
     game_state.level += 1
     
@@ -150,6 +152,9 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
                 if attack.life_span <= 0:
                     canvas.delete(attack.attack)
                     del game_state.Devil_Attack_Dict[attack_name]
+
+            for healthbox in list(game_state.healthboxes):
+                healthbox.update(game_config, game_state)
 
             game_state.blockshead.move(window, game_config.canvas)
             game_state.blockshead.update_shots(game_config, game_state)
