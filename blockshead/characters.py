@@ -2,24 +2,26 @@ import tkinter as tk
 from tkinter import *
 import random
 import numpy as np
+from .objects import Direction
 from .objects import Pistol, Fireball, DevilAttack, Blood
 
 class Blockshead(object):
     """The Blockshead charecter. Shoot, move, lay mines etc. are all contianed within the Blockshead class. Eventually all of the gun details need to be moved to thier own class so that Pistol = Gun(range,damage) and Mine = Gun(radius, damage)
     eventually even Shotgun = Gun(range,damange,arc_width) and so on"""
     def __init__(self, window, game_config):
-        self.image_up = PhotoImage(file = "images/blockshead/bhup.png") # The image changes if Blockshead is facing up down left right
-        self.image_down = PhotoImage(file = "images/blockshead/bhdown.png")
-        self.image_left = PhotoImage(file = "images/blockshead/bhleft.png")
-        self.image_right = PhotoImage(file = "images/blockshead/bhright.png")
+        self.images = {}
+        self.images[Direction.UP] = PhotoImage(file = "images/blockshead/bhup.png") # The image changes if Blockshead is facing up down left right
+        self.images[Direction.DOWN] = PhotoImage(file = "images/blockshead/bhdown.png")
+        self.images[Direction.LEFT] = PhotoImage(file = "images/blockshead/bhleft.png")
+        self.images[Direction.RIGHT] = PhotoImage(file = "images/blockshead/bhright.png")
         self.x = random.randrange(((window.x_start/2)+15),window.x_end) # pick a random starting point on the right side of the field. Zombies start on the left half.
         self.y = random.randrange(window.y_start,window.y_end)
-        self.image = game_config.canvas.create_image(self.x,self.y,image = self.image_up)
+        self.direction = Direction.UP
+        self.image = game_config.canvas.create_image(self.x,self.y,image = self.images[self.direction])
         self.healthbar_bg = game_config.canvas.create_rectangle(self.x + 20, self.y -55, self.x - 20, self.y - 60, fill="Red", belowThis=None)
         self.healthbar = game_config.canvas.create_rectangle(self.x + 20, self.y -55, self.x - 20, self.y - 60, fill="Green", belowThis=None)
         self.x_vel = 0
         self.y_vel = 0
-        self.direction = 1 # TODO: refactor to str or enum
         self.health = 100 # +5 health is added at the beginning of every level
         self.gun = "Pistol"
         self.ammo = "Infinite"
@@ -47,14 +49,7 @@ class Blockshead(object):
 
     def update_sprite(self, game_config):
         """Change Blockshead's image based on the direction he is moving"""
-        if self.direction == 1:
-            game_config.canvas.itemconfigure(self.image, image = self.image_up)
-        elif self.direction == 2:
-            game_config.canvas.itemconfigure(self.image, image = self.image_down)
-        elif self.direction == 3:
-            game_config.canvas.itemconfigure(self.image, image = self.image_left)
-        elif self.direction == 4:
-            game_config.canvas.itemconfigure(self.image, image = self.image_right)
+        game_config.canvas.itemconfigure(self.image, image = self.images[self.direction])
         game_config.canvas.coords(self.image,(self.x),(self.y))
 
         # Health bar
@@ -114,19 +109,19 @@ class Blockshead(object):
         if key == 'w':
             self.x_vel = 0
             self.y_vel = -B_move_length
-            self.direction = 1
+            self.direction = Direction.UP
         elif key == 's':
             self.x_vel = 0
             self.y_vel = B_move_length
-            self.direction = 2
+            self.direction = Direction.DOWN
         elif key == 'a':
             self.x_vel = -B_move_length
             self.y_vel = 0
-            self.direction = 3
+            self.direction = Direction.LEFT
         elif key == 'd':
             self.x_vel = B_move_length
             self.y_vel = 0
-            self.direction = 4
+            self.direction = Direction.RIGHT
         elif key == 'space':
             self.fire_gun(game_config, game_state)
         elif key == '1':
@@ -152,16 +147,15 @@ class Blockshead(object):
 class Zombie(object):
     """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
     def __init__(self, window, game_config):
-        self.directions = ["up", "down", "right", "left", "rightdown", "rightup", "leftup", "leftdown"]
-        self.direction = self.directions[0]
+        self.direction = Direction.UP
         self.images = {}
-        for direction in self.directions:
-            self.images[direction] = PhotoImage(file = "images/zombies/z{}.png".format(direction)) # the 8 Devil images
+        for direction in Direction:
+            self.images[direction] = PhotoImage(file = "images/zombies/z{}.png".format(direction.name.lower())) # the 8 Devil images
 
         self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2))) # create Zombies in the left half of the arena
         self.y = random.randrange(window.y_start,window.y_end)
         
-        self.zombie = game_config.canvas.create_image(self.x,self.y, image = self.images["up"])
+        self.zombie = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
         self.attacked = False
 
     def move(self, target, window, game_config, game_state):
@@ -215,8 +209,8 @@ class Zombie(object):
             direction += "down"
 
         # Load new sprite if direction has changed
-        if direction != "" and direction != self.direction:
-            self.direction = direction
+        if direction != "" and direction != self.direction.name.lower():
+            self.direction = Direction[direction.upper()]
             game_config.canvas.itemconfigure(self.zombie, image = self.images.get(direction, self.images[self.direction]))
 
         game_config.canvas.coords(self.zombie,(self.x),(self.y))
@@ -232,16 +226,15 @@ class Devil(object):
     def __init__(self, window, game_config):
         self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2)))
         self.y = random.randrange(window.y_start,window.y_end)
-        self.directions = ["up", "down", "right", "left", "rightdown", "rightup", "leftup", "leftdown"]
-        self.direction = self.directions[0]
+        self.direction = Direction.UP
         self.attacked = False
         self.attack_fire = 0
         self.health = 100
         self.images = {}
-        for direction in self.directions:
-            self.images[direction] = PhotoImage(file = "images/devils/d{}.png".format(direction))
+        for direction in Direction:
+            self.images[direction] = PhotoImage(file = "images/devils/d{}.png".format(direction.name.lower()))
 
-        self.devil = game_config.canvas.create_image(self.x,self.y, image = self.images["up"])
+        self.devil = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
 
     def move(self, target, window, game_config, game_state):
         """The Devil's movement is the same as the Zombies except that Devils move faster"""
@@ -290,8 +283,8 @@ class Devil(object):
         elif self.y_vel > 0:
             direction += "down"
 
-        if direction != "" and direction != self.direction:
-            self.direction = direction
+        if direction != "" and direction != self.direction.name.lower():
+            self.direction = Direction[direction.upper()]
             game_config.canvas.itemconfigure(self.devil, image = self.images[self.direction])
         
         game_config.canvas.coords(self.devil,(self.x),(self.y))
