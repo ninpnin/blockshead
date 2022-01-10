@@ -17,6 +17,7 @@ class GameConfig:
     Number_of_Zombies = 5
     canvas: bool
     Zombie_Buffer = 30
+    background_color = "#EBDCC7"
 
 @dataclass
 class Screen:

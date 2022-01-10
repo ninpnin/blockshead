@@ -19,16 +19,16 @@ def initialize_game():
     canvas = tk.Canvas(highlightthickness=0, height=window.height, width=window.width)
     canvas.master.title("Blockshead")
     canvas.pack()
-    background = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", belowThis=None)
     
-    # TODO: fix pause screen
-    # pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
-    # print("Pausescreen", pausescreen)
-
     init_state = InitState()
     game_config = GameConfig(canvas=canvas)
-    game_config.background = background
     game_state = GameState()
+
+    # Background
+    background = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
+    game_config.background = background
+
+    # Blockshead
     game_state.blockshead = Blockshead(window, game_config)
     game_state.stats = None
 
@@ -37,6 +37,10 @@ def initialize_game():
     canvas.create_rectangle((window.x_buffer+window.width),0,(window.width-(window.x_buffer)),((2*window.y_buffer)+window.height), fill="Black")
     canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
     canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
+
+    # TODO: fix pause screen
+    # pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
+    # print("Pausescreen", pausescreen)
 
     # Stats
     board = canvas.create_text(200,65)
@@ -85,11 +89,11 @@ def new_level(game_config, game_state, window):
     print("New level:", game_state.level)
     return game_config, game_state
 
-def end_game(score, level):
-    score = str(ceil(score))
-    level = str((level - 1))
-    text = 'Game Over! Final Score: ' + score + ' Final Level: ' + level
-    print(text)
+def end_game(window, game_config, game_state):
+    background = game_config.canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, aboveThis=None)
+    end_text = 'Game Over! Final Score: {}, Final Level: {}'.format(game_state.score, game_state.level -1)
+    font = ('Helvetica','30','bold')
+    game_config.canvas.create_text(window.width // 2, window.height // 2, text=end_text, fill="Black", font=font)
 
 # TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
 def key_press(event, game_config, init_state, game_state, window):
@@ -108,7 +112,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
         init_state.game_started = True
 
     if game_state.blockshead.health <= 0:
-        end_game(game_state.blockshead.score, game_state.level - 1)
+        end_game(window, game_config, game_state)
     else:
         if not game_state.pause_game:
             if levelup:
