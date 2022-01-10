@@ -30,12 +30,17 @@ def initialize_game():
     game_config.background = background
     game_state = GameState()
     game_state.blockshead = Blockshead(window, game_config)
-    game_state.stats = Stats(window, canvas)
+    game_state.stats = None
 
+    # Borders
     canvas.create_rectangle(0,0,(window.x_buffer),(window.y_buffer+window.height), fill="Black") # create all of the buffer images
     canvas.create_rectangle((window.x_buffer+window.width),0,(window.width-(window.x_buffer)),((2*window.y_buffer)+window.height), fill="Black")
     canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
     canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
+
+    # Stats
+    board = canvas.create_text(200,65)
+    canvas.create_rectangle(window.x_buffer,window.y_buffer,window.width - window.x_buffer,window.y_buffer+20,fill="Red")
 
     return game_config, init_state, game_state, window
 
@@ -48,60 +53,16 @@ def pause(toggle, canvas, screen):
         canvas.itemconfigure(screen, state='hidden')
     return toggle
 
-
-class Blood(object):
-    """What happens when you kill something. It create a blood spot on the coordinates of the killed Zombie(s) / Devil(s)
-    They are deleted at the beginning of each new level"""
-    def __init__(self,x,y, game_config):
-        self.image = PhotoImage(file = "images/game_elements/blood.png")
-        self.blood_spot = game_config.canvas.create_image(x,y,image = self.image)
-        game_config.canvas.tag_lower(self.blood_spot)
-        game_config.canvas.tag_lower(game_config.background)
-
-class Zombie_Attack(object):
-    """The yellow circle that the zombies uses to attack Blockshead. It has a life span of 125 instances in the while loop before it disappears.
-    Unless of course it strikes blockshead and lowers blockshead's health by a lot"""
-    def __init__(self, x, y, x_vel, y_vel, canvas):
-        self.x = x
-        self.y = y
-        self.image = PhotoImage(file = "images/game_elements/devil_a_old.png")
-        self.attack = canvas.create_image(self.x,self.y,image = self.image)
-        self.x_vel = x_vel
-        if self.x_vel > 0: # If the velocity in that direction is not 0 it adds 1 to the speed so that it is faster than the Devil who shot it.
-            self.x_vel += .75
-        if self.x_vel < 0:
-            self.x_vel -= .75
-        self.y_vel = y_vel
-        if self.y_vel > 0:
-            self.y_vel += .75
-        if self.y_vel < 0:
-            self.y_vel -= .75
-        self.life_span = 125
-
-    def move(self, canvas, target):
-        self.x += self.x_vel
-        self.y += self.y_vel
-        canvas.coords(self.attack,self.x,self.y)
-        self.life_span -=1
-        if abs(self.x - target.x) < 30 and abs(self.y - target.y) < 30: #Strike Blockshead if within 30 pixels
-            target.health -= 10
-            self.life_span = 0
-
-class Stats(object):
-    """Creates the score label/info. This updates once per loop based on all of Blockshead's attributes ex. health and score"""
-    def __init__(self, window, canvas):
-        self.board = canvas.create_text(200,65)
-        canvas.create_rectangle(window.x_buffer,window.y_buffer,window.width - window.x_buffer,window.y_buffer+20,fill="Red")
-
-    def update(self, game_config, game_state):
-        health_string = str(game_state.blockshead.health)
-        score_string = str(ceil(game_state.blockshead.score))
-        level_string = str(game_state.blockshead.level)
-        gun_string = str(game_state.blockshead.gun)
-        ammo_string = str(game_state.blockshead.ammo)
-        score_board = "Health: " + health_string + "  " + "Score: " + score_string + "  " + "Level: " + level_string + "  " + "Gun: " + gun_string + "  " + "Ammo: " + ammo_string
-        game_config.canvas.delete(self.board)
-        self.board = game_config.canvas.create_text(230,52,text=score_board)
+def update_stats(self, game_config, game_state):
+    # Refactor to change text content instead of creating a new object
+    health_string = str(game_state.blockshead.health)
+    score_string = str(ceil(game_state.blockshead.score))
+    level_string = str(game_state.blockshead.level)
+    gun_string = str(game_state.blockshead.gun)
+    ammo_string = str(game_state.blockshead.ammo)
+    score_board = "Health: " + health_string + "  " + "Score: " + score_string + "  " + "Level: " + level_string + "  " + "Gun: " + gun_string + "  " + "Ammo: " + ammo_string
+    game_config.canvas.delete(self.board)
+    self.board = game_config.canvas.create_text(230,52,text=score_board)
 
 def new_level(game_config, game_state, window):
     """For every new level all of the Devils and Zombies have been killed so new ones need to be created. Each time 70% more Zombies are added"""
@@ -136,7 +97,7 @@ def key_press(event, game_config, init_state, game_state, window):
     if press == "g":
         startgame(game_config, init_state, game_state, window)
     else:
-        game_state.blockshead.key(press, game_config)
+        game_state.blockshead.key(press, game_config, game_state)
 
 def key_release(event, game_state):
     release = event.keysym
@@ -154,12 +115,12 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
                 new_level(game_config, game_state, window)
             for zombie in game_state.Zombie_Dict.values():
                 zombie.move(game_state.blockshead, window, game_config, game_state)
-                zombie.update_sprite()
+                zombie.update_sprite(game_config)
                 zombie.contact(game_state.blockshead)
             for devil in game_state.Devil_Dict.values():
                 devil.move(game_state.blockshead, window, game_config, game_state)
                 devil.attack(game_state.blockshead, game_config, game_state)
-                devil.update_sprite()
+                devil.update_sprite(game_config)
                 devil.contact(game_state.blockshead)
 
             for attack_name, attack in list(game_state.Devil_Attack_Dict.items()):
@@ -171,7 +132,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
             game_state.blockshead.move(window, game_config.canvas)
             game_state.blockshead.update_shots(game_config, game_state)
             game_state.blockshead.update_sprite(game_config)
-            game_state.stats.update(game_config, game_state)
+            #update_stats(game_config, game_state)
         else:
             pass
 
