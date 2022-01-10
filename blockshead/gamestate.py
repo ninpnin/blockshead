@@ -18,6 +18,7 @@ class GameConfig:
     canvas: bool
     Zombie_Buffer = 30
     background_color = "#EBDCC7"
+    font = ('Helvetica','30','bold')
 
 @dataclass
 class Screen:
@@ -39,7 +40,7 @@ class GameState:
     blood_marks = 0
     number_of_mines = 0
 
-    pause_game = False
+    paused = False
 
     shots = set()
     Mines_Dict = {} # holds all of the mines

@@ -38,9 +38,11 @@ def initialize_game():
     canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
     canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
 
-    # TODO: fix pause screen
-    # pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
-    # print("Pausescreen", pausescreen)
+    # Pause screen
+    game_config.pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
+    game_config.pausetext = canvas.create_text(window.width // 2, window.height // 2, text="Paused", fill="Black", font=game_config.font)
+    canvas.itemconfigure(game_config.pausescreen, state='hidden')
+    canvas.itemconfigure(game_config.pausetext, state='hidden')
 
     # Stats
     board = canvas.create_text(200,65)
@@ -48,14 +50,17 @@ def initialize_game():
 
     return game_config, init_state, game_state, window
 
-def pause(toggle, canvas, screen):
-    toggle = not toggle
-    if pause_game:
-        canvas.tag_raise(screen)
-        canvas.itemconfigure(screen, state='normal')
+def pause_game(game_config, game_state):
+    if not game_state.paused:
+        game_config.canvas.tag_raise(game_config.pausescreen)
+        game_config.canvas.itemconfigure(game_config.pausescreen, state='normal')
+        game_config.canvas.tag_raise(game_config.pausetext)
+        game_config.canvas.itemconfigure(game_config.pausetext, state='normal')
+        game_state.paused = True
     else:
-        canvas.itemconfigure(screen, state='hidden')
-    return toggle
+        game_config.canvas.itemconfigure(game_config.pausescreen, state='hidden')
+        game_config.canvas.itemconfigure(game_config.pausetext, state='hidden')
+        game_state.paused = False
 
 def update_stats(self, game_config, game_state):
     # Refactor to change text content instead of creating a new object
@@ -92,14 +97,16 @@ def new_level(game_config, game_state, window):
 def end_game(window, game_config, game_state):
     background = game_config.canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, aboveThis=None)
     end_text = 'Game Over! Final Score: {}, Final Level: {}'.format(game_state.score, game_state.level -1)
-    font = ('Helvetica','30','bold')
-    game_config.canvas.create_text(window.width // 2, window.height // 2, text=end_text, fill="Black", font=font)
+    game_config.canvas.create_text(window.width // 2, window.height // 2, text=end_text, fill="Black", font=game_config.font)
 
 # TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
 def key_press(event, game_config, init_state, game_state, window):
     pressed_character = event.keysym
     if pressed_character == "g":
         startgame(game_config, init_state, game_state, window)
+    elif pressed_character == "p":
+        print("Pause game")
+        pause_game(game_config, game_state)
     else:
         game_state.blockshead.key(pressed_character, game_config, game_state)
 
@@ -114,7 +121,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
     if game_state.blockshead.health <= 0:
         end_game(window, game_config, game_state)
     else:
-        if not game_state.pause_game:
+        if not game_state.paused:
             if levelup:
                 new_level(game_config, game_state, window)
             for zombie in game_state.Zombie_Dict.values():
