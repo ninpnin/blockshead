@@ -45,7 +45,7 @@ def initialize_game():
     canvas.itemconfigure(game_config.pausetext, state='hidden')
 
     # Stats
-    board = canvas.create_text(200,65)
+    game_config.stats = canvas.create_text(200,65)
     canvas.create_rectangle(window.x_buffer,window.y_buffer,window.width - window.x_buffer,window.y_buffer+20,fill="Red")
 
     return game_config, init_state, game_state, window
@@ -62,7 +62,7 @@ def pause_game(game_config, game_state):
         game_config.canvas.itemconfigure(game_config.pausetext, state='hidden')
         game_state.paused = False
 
-def update_stats(self, game_config, game_state):
+def update_stats(game_config, game_state):
     # Refactor to change text content instead of creating a new object
     health_string = str(game_state.blockshead.health)
     score_string = str(ceil(game_state.score))
@@ -70,8 +70,8 @@ def update_stats(self, game_config, game_state):
     gun_string = str(game_state.blockshead.gun)
     ammo_string = str(game_state.blockshead.ammo)
     score_board = "Health: " + health_string + "  " + "Score: " + score_string + "  " + "Level: " + level_string + "  " + "Gun: " + gun_string + "  " + "Ammo: " + ammo_string
-    game_config.canvas.delete(self.board)
-    self.board = game_config.canvas.create_text(230,52,text=score_board)
+    game_config.canvas.delete(game_config.stats)
+    game_config.stats = game_config.canvas.create_text(230,52,text=score_board)
 
 def new_level(game_config, game_state, window):
     """For every new level all of the Devils and Zombies have been killed so new ones need to be created. Each time 70% more Zombies are added"""
@@ -96,7 +96,7 @@ def new_level(game_config, game_state, window):
 
 def end_game(window, game_config, game_state):
     background = game_config.canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, aboveThis=None)
-    end_text = 'Game Over! Final Score: {}, Final Level: {}'.format(game_state.score, game_state.level -1)
+    end_text = 'Game Over! Final Score: {}, Final Level: {}'.format(ceil(game_state.score), game_state.level -1)
     game_config.canvas.create_text(window.width // 2, window.height // 2, text=end_text, fill="Black", font=game_config.font)
 
 # TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
@@ -143,7 +143,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
             game_state.blockshead.move(window, game_config.canvas)
             game_state.blockshead.update_shots(game_config, game_state)
             game_state.blockshead.update_sprite(game_config)
-            #update_stats(game_config, game_state)
+            update_stats(game_config, game_state)
         else:
             pass
 
