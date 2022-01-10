@@ -15,7 +15,7 @@ class Blood(object):
         game_config.canvas.tag_lower(self.blood_spot)
         game_config.canvas.tag_lower(game_config.background)
 
-class Zombie_Attack(object):
+class DevilAttack(object):
     """The yellow circle that the zombies uses to attack Blockshead. It has a life span of 125 instances in the while loop before it disappears.
     Unless of course it strikes blockshead and lowers blockshead's health by a lot"""
     def __init__(self, x, y, x_vel, y_vel, canvas):

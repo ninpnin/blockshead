@@ -93,15 +93,15 @@ def end_game(score, level):
 
 # TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
 def key_press(event, game_config, init_state, game_state, window):
-    press = event.keysym
-    if press == "g":
+    pressed_character = event.keysym
+    if pressed_character == "g":
         startgame(game_config, init_state, game_state, window)
     else:
-        game_state.blockshead.key(press, game_config, game_state)
+        game_state.blockshead.key(pressed_character, game_config, game_state)
 
 def key_release(event, game_state):
-    release = event.keysym
-    game_state.blockshead.keyup(release)
+    released_character = event.keysym
+    game_state.blockshead.keyup(released_character)
 
 def main_loop(game_config, init_state, game_state, window, levelup=False):
     if not init_state.game_started:

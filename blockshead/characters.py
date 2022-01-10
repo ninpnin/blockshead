@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import *
 import random
 import numpy as np
-from .objects import Pistol, Fireball, Zombie_Attack, Blood
+from .objects import Pistol, Fireball, DevilAttack, Blood
 
 class Blockshead(object):
     """The Blockshead charecter. Shoot, move, lay mines etc. are all contianed within the Blockshead class. Eventually all of the gun details need to be moved to thier own class so that Pistol = Gun(range,damage) and Mine = Gun(radius, damage)
@@ -302,7 +302,7 @@ class Devil(object):
     def attack(self, target, game_config, game_state):
         """If the Devil is within +/- 200 pixels in the X and Y directions then it shoots a fireball at blockshead 1 time and then waits 45 loops to shoot agian"""
         if abs(target.x - self.x) < 200 and abs(target.y - self.y) < 200 and self.attack_fire > 45:
-            d_attack = Zombie_Attack(self.x,self.y,self.x_vel,self.y_vel, game_config.canvas)
+            d_attack = DevilAttack(self.x,self.y,self.x_vel,self.y_vel, game_config.canvas)
             total_devil_attacks = len(game_state.Devil_Attack_Dict)
             game_state.Devil_Attack_Dict[total_devil_attacks] = d_attack
             self.attack_fire = 0
