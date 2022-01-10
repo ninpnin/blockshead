@@ -56,8 +56,8 @@ def pause(toggle, canvas, screen):
 def update_stats(self, game_config, game_state):
     # Refactor to change text content instead of creating a new object
     health_string = str(game_state.blockshead.health)
-    score_string = str(ceil(game_state.blockshead.score))
-    level_string = str(game_state.blockshead.level)
+    score_string = str(ceil(game_state.score))
+    level_string = str(game_state.level)
     gun_string = str(game_state.blockshead.gun)
     ammo_string = str(game_state.blockshead.ammo)
     score_board = "Health: " + health_string + "  " + "Score: " + score_string + "  " + "Level: " + level_string + "  " + "Gun: " + gun_string + "  " + "Ammo: " + ammo_string
@@ -80,9 +80,9 @@ def new_level(game_config, game_state, window):
 
     game_state.blockshead.health += 5 
     game_state.blockshead.mine_count += int(game_config.Number_of_Zombies / 5)
-    game_state.blockshead.level += 1
+    game_state.level += 1
     
-    print("New level:", game_state.blockshead.level)
+    print("New level:", game_state.level)
     return game_config, game_state
 
 def end_game(score, level):
@@ -108,7 +108,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
         init_state.game_started = True
 
     if game_state.blockshead.health <= 0:
-        end_game(game_state.blockshead.score, game_state.blockshead.level - 1)
+        end_game(game_state.blockshead.score, game_state.level - 1)
     else:
         if not game_state.pause_game:
             if levelup:

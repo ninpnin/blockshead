@@ -7,8 +7,7 @@ import math
 
 
 class Blood(object):
-    """What happens when you kill something. It create a blood spot on the coordinates of the killed Zombie(s) / Devil(s)
-    They are deleted at the beginning of each new level"""
+    """Static object for drawing blood on the ground"""
     def __init__(self,x,y, game_config):
         self.image = PhotoImage(file = "images/game_elements/blood.png")
         self.blood_spot = game_config.canvas.create_image(x,y,image = self.image)
@@ -16,8 +15,8 @@ class Blood(object):
         game_config.canvas.tag_lower(game_config.background)
 
 class DevilAttack(object):
-    """The yellow circle that the zombies uses to attack Blockshead. It has a life span of 125 instances in the while loop before it disappears.
-    Unless of course it strikes blockshead and lowers blockshead's health by a lot"""
+    """The yellow circle that the devils use to attack Blockshead. It has a life span of 125 timesteps.
+    Is also deleted upon hitting Blockshead"""
     def __init__(self, x, y, x_vel, y_vel, canvas):
         self.x = x
         self.y = y
@@ -45,7 +44,7 @@ class DevilAttack(object):
             self.life_span = 0
 
 """
-Weapons
+Weapons. These classes depict shots coming from the weapons.
 """
 class Pistol:
     def __init__(self, game_config, game_state):
@@ -131,6 +130,7 @@ class Fireball:
         self.attack = canvas.create_image(self.x,self.y,image = self.image)
 
     def on_canvas(self):
+        # TODO: fix coordinates based on game_config or window
         x_coord = self.x > 0 and self.x < 500
         y_coord = self.y > 0 and self.y < 500
 

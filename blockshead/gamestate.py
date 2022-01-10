@@ -47,6 +47,10 @@ class GameState:
     Dead_Zombie_List = []
     Devil_Attack_Dict = {} # The spheres that the Devils can attack with
     blood_dict = {}
+
+    score: int = 0
+    level: int = 1
+
 @dataclass
 class Shots:
     direction: int

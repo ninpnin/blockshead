@@ -17,11 +17,9 @@ class Blockshead(object):
         self.image = game_config.canvas.create_image(self.x,self.y,image = self.image_up)
         self.x_vel = 0
         self.y_vel = 0
-        self.direction = 1
+        self.direction = 1 # TODO: refactor to str or enum
         self.health = 100 # +5 health is added at the beginning of every level
         self.gun = "Pistol"
-        self.level = 1
-        self.score = 0
         self.ammo = "Infinite"
         self.pause = False
         self.bonus_score = 0
@@ -83,7 +81,7 @@ class Blockshead(object):
             game_state.blood_marks +=1
             game_config.canvas.delete(zombie)
             del game_state.Zombie_Dict[zombie_ix]
-            game_state.blockshead.score+=1
+            game_state.score+=1
             self.bonus_score +=1
 
         # Kill the devils that have run out of health
@@ -95,10 +93,10 @@ class Blockshead(object):
             if game_state.Devil_Dict[devil_ix].health <= 0:
                 game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
                 del game_state.Devil_Dict[devil_ix]
-                game_state.blockshead.score+=1
+                game_state.score+=1
                 self.bonus_score +=1
 
-            self.score += (self.bonus_score / 3)
+            game_state.score += (self.bonus_score / 3)
 
         game_config.canvas.update()
 
@@ -155,8 +153,6 @@ class Zombie(object):
         self.y = random.randrange(window.y_start,window.y_end)
         
         self.zombie = game_config.canvas.create_image(self.x,self.y, image = self.images["up"])
-        self.alive = True
-        self.distance_to_b = 0
         self.attacked = False
 
     def move(self, target, window, game_config, game_state):
@@ -229,8 +225,6 @@ class Devil(object):
         self.y = random.randrange(window.y_start,window.y_end)
         self.directions = ["up", "down", "right", "left", "rightdown", "rightup", "leftup", "leftdown"]
         self.direction = self.directions[0]
-        self.alive = True
-        self.distance_to_b = 0
         self.attacked = False
         self.attack_fire = 0
         self.health = 100
