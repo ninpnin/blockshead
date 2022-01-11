@@ -5,6 +5,19 @@ import random
 import time
 import math
 from enum import Enum
+from playsound import playsound
+from threading import Thread
+
+def playsound_nonblocking(path):
+    """
+    Play sound file in a separate thread
+    (don't block current thread)
+    """
+    def play_thread_function():
+        playsound(path)
+
+    play_thread = Thread(target=play_thread_function)
+    play_thread.start()
 
 class Direction(Enum):
     UP = (0,-1)
@@ -74,6 +87,8 @@ class Pistol:
         self.image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end,self.shoot_y_end,fill="Red") # create the bullet
 
         self.attacked = False
+
+        playsound_nonblocking('audio/pistol.mp3')
 
     def contact(self, game_config, game_state):
         killed_zombies, killed_devils = [], []
