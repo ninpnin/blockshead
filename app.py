@@ -156,7 +156,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
             for healthbox in list(game_state.healthboxes):
                 healthbox.update(game_config, game_state)
 
-            game_state.blockshead.move(window, game_config.canvas)
+            game_state.blockshead.move(window, game_config.canvas, game_state)
             game_state.blockshead.update_shots(game_config, game_state)
             game_state.blockshead.update_sprite(game_config)
             update_stats(game_config, game_state)

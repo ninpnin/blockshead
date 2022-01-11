@@ -32,8 +32,8 @@ class Blockshead(object):
         self.bullet_images = []
         self.cooldown = 0
 
-    def move(self, window, canvas):
-        if (self.x >= window.x_end) and self.x_vel > 0: # Can blockshead move in that direction or will he strike the edge of the game
+    def move(self, window, canvas, game_state):
+        if (self.x >= window.x_end) and self.x_vel > 0:
             self.x_vel = 0
         elif self.x <= window.x_start and self.x_vel < 0:
             self.x_vel = 0
@@ -42,6 +42,27 @@ class Blockshead(object):
             self.y_vel = 0
         elif self.y <= window.y_start and self.y_vel < 0:
             self.y_vel = 0
+
+        next_x = self.x + self.x_vel * 2
+        next_y = self.y + self.y_vel * 2
+        radius = 5
+        max_x, min_x = max(next_x, self.x), max(next_x, self.x)
+        max_y, min_y = max(next_y, self.y), max(next_y, self.y)
+
+        if max_x == min_x:
+            max_x += radius
+            min_x -= radius
+        if max_y == min_y:
+            max_y += radius
+            min_y -= radius
+
+        for zombie in game_state.Zombie_Dict.values():
+            if min_x <= zombie.x <= max_x and min_y <= zombie.y <= max_y:
+                self.x_vel, self.y_vel = 0, 0
+
+        for devil in game_state.Devil_Dict.values():
+            if min_x <= devil.x <= max_x and min_y <= devil.y <= max_y:
+                self.x_vel, self.y_vel = 0, 0
 
         self.x += self.x_vel
         self.y += self.y_vel
@@ -177,34 +198,46 @@ class Zombie(object):
         avoid having all of the Zombies stack up on top of each other and froming one really dense Zombie.
         That is what the really long line of code below is testing
         """
-        which_zombie = 0
-        collision = False
-        self.x_vel = 0
-        self.y_vel = 0
-        blockshead = game_state.blockshead
-        for which_zombie in game_state.Zombie_Dict:
-            test_self = game_state.Zombie_Dict[which_zombie]
-            condition1x = abs(self.x - blockshead.x) - abs(blockshead.x - test_self.x) > 0
-            condition2x = abs(self.x - blockshead.x) - abs(blockshead.x - test_self.x) < game_config.Zombie_Buffer
-            condition1y =  abs(self.y - blockshead.y) - abs(blockshead.y - test_self.y) > 0
-            condition2y = abs(self.y - blockshead.y) - abs(blockshead.y - test_self.y) < game_config.Zombie_Buffer
-            if condition1x and condition2x and condition1y and condition2y:
-                collision = True
 
-        if not collision:
-            self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
-            self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
+        self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
+        self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
+        self.radius = 25
 
-            if self.x >= window.width - 25: # x coords
-                self.x_vel = -game_config.Zombie_per_move
-            if self.x <= 0 + 5:
-                self.x_vel = game_config.Zombie_per_move
-            if self.y >= window.height - 25:# y coords
-                self.y_vel = -game_config.Zombie_per_move
-            if self.y <= 0 + 5:
-                self.y_vel = game_config.Zombie_per_move
-            self.y += self.y_vel
-            self.x += self.x_vel
+        next_x = self.x + self.x_vel
+        next_y = self.y + self.y_vel
+
+        for zombie in game_state.Zombie_Dict.values():
+            if zombie != self:
+                if abs(next_x - zombie.x) < self.radius and abs(next_y - zombie.y) < self.radius:
+                    if abs(self.x - zombie.x) >= self.radius:
+                        self.x_vel = 0
+                    elif abs(self.y - zombie.y) >= self.radius:
+                        self.y_vel = 0
+                    else:
+                        self.x_vel, self.y_vel = 0, 0
+
+        for devil in game_state.Devil_Dict.values():
+            if abs(next_x - devil.x) < self.radius and abs(next_y - devil.y) < self.radius:
+                if abs(self.x - devil.x) >= self.radius:
+                    self.x_vel = 0
+                elif abs(self.y - devil.y) >= self.radius:
+                    self.y_vel = 0
+                else:
+                    self.x_vel, self.y_vel = 0, 0
+        
+        if abs(next_x - target.x) < self.radius and abs(next_y - target.y) < self.radius:
+            self.x_vel, self.y_vel = 0, 0
+
+        if self.x >= window.width - 25: # x coords
+            self.x_vel = -game_config.Zombie_per_move
+        if self.x <= 0 + 5:
+            self.x_vel = game_config.Zombie_per_move
+        if self.y >= window.height - 25:# y coords
+            self.y_vel = -game_config.Zombie_per_move
+        if self.y <= 0 + 5:
+            self.y_vel = game_config.Zombie_per_move
+        self.y += self.y_vel
+        self.x += self.x_vel
              # move the Zombie accordingly based on if it should move or another Zombie is in its path
         if self.cooldown > 0:
             self.cooldown -= 1
@@ -231,7 +264,7 @@ class Zombie(object):
 
     def contact(self, target):
         """This is how the Zombies do damage to Blockshead. If they com in contact with Blockshead it deducts health from blockshead"""
-        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.cooldown == 0:
+        if abs(target.x - self.x) < self.radius + 2 and abs(target.y - self.y) < self.radius + 2 and self.cooldown == 0:
             target.health -= 1
             self.cooldown = 5
 
@@ -252,38 +285,47 @@ class Devil(object):
 
     def move(self, target, window, game_config, game_state):
         """The Devil's movement is the same as the Zombies except that Devils move faster"""
-        which_zombie = 0
-        collision = False
-        self.x_vel = 0
-        self.y_vel = 0
-        for the_devil in game_state.Devil_Dict:
-            test_self = game_state.Devil_Dict[the_devil]
-            if (abs(self.x - target.x) - abs(target.x - test_self.x) > 0
-            and abs(self.x - target.x) - abs(target.x - test_self.x) < game_state.Zombie_Buffer
-            and abs(self.y - target.y) - abs(target.y - test_self.y) > 0
-            and abs(self.y - target.y) - abs(target.y - test_self.y) < game_state.Zombie_Buffer):
-                collision = True
+        self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
+        self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
+        self.radius = 25
 
-        if not collision:
-            self.x_vel = - game_config.Devil_move * np.sign(self.x - target.x)
-            self.y_vel = - game_config.Devil_move * np.sign(self.y - target.y)
+        next_x = self.x + self.x_vel
+        next_y = self.y + self.y_vel
 
-            if self.x >= window.width - 25: # x coords
-                self.x_vel = - game_config.Devil_move
-            if self.x <= 0 + 5:
-                self.x_vel = game_config.Devil_move
-            if self.y < target.y:
-                self.y_vel = game_config.Devil_move
-            if self.y > target.y:
-                self.y_vel = -game_config.Devil_move
-            elif self.y == target.y:
-                self.y_vel = 0
-            if self.y >= window.height - 25:# y coords
-                self.y_vel = -game_config.Devil_move
-            if self.y <= 0 + 5:
-                self.y_vel = game_config.Devil_move
-            self.y += self.y_vel
-            self.x += self.x_vel
+        for zombie in game_state.Zombie_Dict.values():
+            if abs(next_x - zombie.x) < self.radius and abs(next_y - zombie.y) < self.radius:
+                if abs(self.x - zombie.x) >= self.radius:
+                    self.x_vel = 0
+                elif abs(self.y - zombie.y) >= self.radius:
+                    self.y_vel = 0
+                else:
+                    self.x_vel, self.y_vel = 0, 0
+
+        for devil in game_state.Devil_Dict.values():
+            if devil != self:
+                if abs(next_x - devil.x) < self.radius and abs(next_y - devil.y) < self.radius:
+                    if abs(self.x - devil.x) >= self.radius:
+                        self.x_vel = 0
+                    elif abs(self.y - devil.y) >= self.radius:
+                        self.y_vel = 0
+                    else:
+                        self.x_vel, self.y_vel = 0, 0
+        
+        if abs(next_x - target.x) < self.radius and abs(next_y - target.y) < self.radius:
+            self.x_vel, self.y_vel = 0, 0
+
+        if self.x >= window.width - 25: # x coords
+            self.x_vel = -game_config.Zombie_per_move
+        if self.x <= 0 + 5:
+            self.x_vel = game_config.Zombie_per_move
+        if self.y >= window.height - 25:# y coords
+            self.y_vel = -game_config.Zombie_per_move
+        if self.y <= 0 + 5:
+            self.y_vel = game_config.Zombie_per_move
+
+        self.y += self.y_vel
+        self.x += self.x_vel
+
         if self.cooldown > 0:
             self.cooldown -= 1
 
@@ -307,7 +349,7 @@ class Devil(object):
 
     def contact(self, target):
         """If a Devil comes in contact with blockshead it deducts more health than a Zombie would"""
-        if abs(target.x - self.x) < 10 and abs(target.y - self.y) < 10 and self.cooldown == 0:
+        if abs(target.x - self.x) < self.radius + 2 and abs(target.y - self.y) < self.radius + 2 and self.cooldown == 0:
             target.health -= 2
             self.cooldown = 5
 
