@@ -121,7 +121,7 @@ def key_press(event, game_config, init_state, game_state, window):
         print("Pause game")
         pause_game(game_config, game_state)
     else:
-        game_state.blockshead.key(pressed_character, game_config, game_state)
+        game_state.blockshead.key(pressed_character, window, game_config, game_state)
 
 def key_release(event, game_state):
     released_character = event.keysym

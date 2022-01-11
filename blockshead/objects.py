@@ -64,22 +64,50 @@ class Pistol:
         self.direction = blockshead.direction
         x_vel, y_vel = blockshead.direction.value
         self.range = 100
-        self.shoot_x_start = x_vel* 10 + blockshead.x
+        self.damage = 26
+        self.radius = 30
+        self.shoot_x_start = x_vel * 10 + blockshead.x
         self.shoot_x_end = x_vel * self.range + blockshead.x + 1
         self.shoot_y_start = y_vel * 10 + blockshead.y
         self.shoot_y_end = y_vel * self.range + blockshead.y + 1
         self.lifetime = 3
         self.image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end,self.shoot_y_end,fill="Red") # create the bullet
 
+        self.attacked = False
+
+    def contact(self, game_config, game_state):
+        killed_zombies, killed_devils = [], []
+
+        max_x, min_x = max(self.shoot_x_start, self.shoot_x_end), min(self.shoot_x_start, self.shoot_x_end)
+        max_y, min_y = max(self.shoot_y_start, self.shoot_y_end), min(self.shoot_y_start, self.shoot_y_end)
+        
+        # Calculate damage inflicted on regular zombies
+        for zombie_ix, Zombie in game_state.Zombie_Dict.items():
+            cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
+            cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
+            if cond_x and cond_y:
+                Zombie.health -= self.damage
+                killed_zombies.append(zombie_ix)
+
+        # Calculate damage inflicted on devils
+        for devil_ix, Zombie in game_state.Devil_Dict.items():
+            cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
+            cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
+
+            if cond_x and cond_y:
+                Zombie.health -= self.damage # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
+                killed_devils.append(devil_ix)
+
+        return killed_zombies, killed_devils
+
     def update(self, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
         canvas = game_config.canvas
-        killed_zombies, killed_devils = [], []
         if self.lifetime < 0:
             canvas.delete(self.image)
             canvas.update()
             game_state.shots.remove(self)
-            return killed_zombies, killed_devils
+            return [], []
 
         self.lifetime -= 1
 
@@ -89,62 +117,106 @@ class Pistol:
         canvas.coords(self.image, self.shoot_x_start,self.shoot_y_start,self.shoot_x_end,self.shoot_y_end)
         canvas.update()
 
+        if not self.attacked:
+            self.attacked = True
+            return self.contact(game_config, game_state)
+
+        return [], []
+
+
+
+class Uzi:
+    def __init__(self, game_config, game_state):
+        canvas = game_config.canvas
+        blockshead = game_state.blockshead
+        self.direction = blockshead.direction
+        x_vel, y_vel = blockshead.direction.value
+        self.range = 250
+        self.damage = 26
+        self.radius = 30
+        self.shoot_x_start = x_vel * 10 + blockshead.x
+        self.shoot_x_end = x_vel * self.range + blockshead.x + 1
+        self.shoot_y_start = y_vel * 10 + blockshead.y
+        self.shoot_y_end = y_vel * self.range + blockshead.y + 1
+        self.lifetime = 3
+        self.image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end,self.shoot_y_end,fill="Red") # create the bullet
+
+        self.attacked = False
+
+    def contact(self, game_config, game_state):
+        killed_zombies, killed_devils = [], []
+
+        max_x, min_x = max(self.shoot_x_start, self.shoot_x_end), min(self.shoot_x_start, self.shoot_x_end)
+        max_y, min_y = max(self.shoot_y_start, self.shoot_y_end), min(self.shoot_y_start, self.shoot_y_end)
+        
         # Calculate damage inflicted on regular zombies
         for zombie_ix, Zombie in game_state.Zombie_Dict.items():
-            if self.direction == Direction.UP:
-                if Zombie.y < self.shoot_y_start and Zombie.y > self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                    killed_zombies.append(zombie_ix)
-            elif self.direction == Direction.DOWN:
-                if Zombie.y > self.shoot_y_start and Zombie.y < self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                    killed_zombies.append(zombie_ix)
-            elif self.direction == Direction.LEFT:
-                if Zombie.x < self.shoot_x_start and Zombie.x > self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                    killed_zombies.append(zombie_ix)
-            elif self.direction == Direction.RIGHT:
-                if Zombie.x > self.shoot_x_start and Zombie.x < self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                    killed_zombies.append(zombie_ix)
+            cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
+            cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
+            if cond_x and cond_y:
+                Zombie.health -= self.damage
+                killed_zombies.append(zombie_ix)
 
         # Calculate damage inflicted on devils
         for devil_ix, Zombie in game_state.Devil_Dict.items():
-            if self.direction == Direction.UP:
-                if Zombie.y < self.shoot_y_start and Zombie.y > self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                    Zombie.health -= 26 # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
-                    killed_devils.append(devil_ix)
-            elif self.direction == Direction.DOWN:
-                if Zombie.y > self.shoot_y_start and Zombie.y < self.shoot_y_end and abs(Zombie.x - self.shoot_x_start) < 25:
-                    Zombie.health -= 26
-                    killed_devils.append(devil_ix)
-            elif self.direction == Direction.LEFT:
-                if Zombie.x < self.shoot_x_start and Zombie.x > self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                    Zombie.health -= 26
-                    killed_devils.append(devil_ix)
-            elif self.direction == Direction.RIGHT:
-                if Zombie.x > self.shoot_x_start and Zombie.x < self.shoot_x_end and abs(Zombie.y - self.shoot_y_start) < 25:
-                    Zombie.health -= 26
-                    killed_devils.append(devil_ix)
+            cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
+            cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
+
+            if cond_x and cond_y:
+                Zombie.health -= self.damage # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
+                killed_devils.append(devil_ix)
 
         return killed_zombies, killed_devils
 
+    def update(self, game_config, game_state):
+        """Fires whichever weapon that blockshead is using at the moment"""
+        canvas = game_config.canvas
+        if self.lifetime < 0:
+            canvas.delete(self.image)
+            canvas.update()
+            game_state.shots.remove(self)
+            return [], []
+
+        self.lifetime -= 1
+
+        # Update image width
+        self.shoot_x_start = (self.shoot_x_start + self.shoot_x_end) // 2
+        self.shoot_y_start = (self.shoot_y_start + self.shoot_y_end) // 2
+        canvas.coords(self.image, self.shoot_x_start,self.shoot_y_start,self.shoot_x_end,self.shoot_y_end)
+        canvas.update()
+
+        if not self.attacked:
+            self.attacked = True
+            game_state.blockshead.ammo = max(0, game_state.blockshead.ammo - 1)
+            return self.contact(game_config, game_state)
+
+        return [], []
+
+
 
 class Fireball:
-    def __init__(self, game_config, game_state):
+    def __init__(self, window, game_config, game_state):
         canvas = game_config.canvas
         blockshead = game_state.blockshead
 
         self.x = blockshead.x
         self.y = blockshead.y
 
-        self.x_vel = int(np.sign(blockshead.x_vel)) * 5
-        self.y_vel = int(np.sign(blockshead.y_vel)) * 5
+        self.x_vel, self.y_vel = blockshead.direction.value
+        self.x_vel, self.y_vel = self.x_vel * 5, self.y_vel * 5
 
-        self.direction = blockshead.direction
         self.image = PhotoImage(file = "images/game_elements/fireball_small.png")
         self.attack = canvas.create_image(self.x,self.y,image = self.image)
+        self.window = window
+
+        game_state.blockshead.ammo = max(0, game_state.blockshead.ammo - 1)
+
+        self.damage = 35
 
     def on_canvas(self):
         # TODO: fix coordinates based on game_config or window
-        x_coord = self.x > 0 and self.x < 500
-        y_coord = self.y > 0 and self.y < 500
+        x_coord = self.x > 0 and self.x < self.window.width
+        y_coord = self.y > 0 and self.y < self.window.height
 
         is_on_canvas = x_coord and y_coord
         return is_on_canvas
@@ -173,6 +245,7 @@ class Fireball:
         # Calculate damage inflicted on regular zombies
         for zombie_ix, Zombie in game_state.Zombie_Dict.items():
             if abs(Zombie.x - self.x) < 10 and abs(Zombie.y - self.y) < 10:
+                Zombie.health -= self.damage 
                 self.delete(game_config, game_state)
                 killed_zombies.append(zombie_ix)
                 return killed_zombies, killed_devils
@@ -180,7 +253,7 @@ class Fireball:
         # Calculate damage inflicted on devils
         for devil_ix, Zombie in game_state.Devil_Dict.items():
             if abs(Zombie.x - self.x) < 10 and abs(Zombie.y - self.y) < 10:
-                Zombie.health -= 26 # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
+                Zombie.health -= self.damage 
                 self.delete(game_config, game_state)
                 killed_devils.append(devil_ix)
                 return killed_zombies, killed_devils
@@ -197,13 +270,15 @@ class Healthbox(object):
         print(self.x, self.y)
         self.image = PhotoImage(file = "images/game_elements/healthbox.png")
         self.image_ref = game_config.canvas.create_image(self.x, self.y, image=self.image)
-
+        self.radius = 25
+        self.health = 25
+        
     def update(self, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
         canvas = game_config.canvas
 
-        if abs(game_state.blockshead.x - self.x) < 10 and abs(game_state.blockshead.y - self.y) < 10:
-            game_state.blockshead.health = min(100, game_state.blockshead.health + 25)
+        if abs(game_state.blockshead.x - self.x) < self.radius and abs(game_state.blockshead.y - self.y) < self.radius:
+            game_state.blockshead.health = min(100, game_state.blockshead.health + self.health)
             game_state.healthboxes.pop(game_state.healthboxes.index(self))
             game_config.canvas.delete(self.image_ref)
 

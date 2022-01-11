@@ -3,7 +3,7 @@ from tkinter import *
 import random
 import numpy as np
 from .objects import Direction
-from .objects import Pistol, Fireball, DevilAttack, Blood
+from .objects import Pistol, Uzi, Fireball, DevilAttack, Blood
 
 class Blockshead(object):
     """The Blockshead charecter. Shoot, move, lay mines etc. are all contianed within the Blockshead class. Eventually all of the gun details need to be moved to thier own class so that Pistol = Gun(range,damage) and Mine = Gun(radius, damage)
@@ -59,17 +59,24 @@ class Blockshead(object):
         game_config.canvas.tag_raise(self.healthbar_bg)
         game_config.canvas.tag_raise(self.healthbar)
 
-    def fire_gun(self, game_config, game_state):
+    def fire_gun(self, window, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
         self.bonus_score = 0
         if self.cooldown == 0:
             if self.gun == "Pistol":
                 shot = Pistol(game_config, game_state)
                 self.cooldown = 10
+                game_state.shots.add(shot)
+            elif self.gun == "Uzi":
+                if game_state.blockshead.ammo > 0:
+                    shot = Uzi(game_config, game_state)
+                    self.cooldown = 10
+                    game_state.shots.add(shot)
             elif self.gun == "Fireball":
-                shot = Fireball(game_config, game_state)
-                self.cooldown = 30
-            game_state.shots.add(shot)
+                if game_state.blockshead.ammo > 0:
+                    shot = Fireball(window, game_config, game_state)
+                    self.cooldown = 30
+                    game_state.shots.add(shot)
 
     def update_shots(self, game_config, game_state):
         kill_list, kill_devil = [], []
@@ -83,10 +90,11 @@ class Blockshead(object):
             mark = Blood(zombie.x, zombie.y,game_config)
             game_state.blood_dict[game_state.blood_marks] = mark
             game_state.blood_marks +=1
-            game_config.canvas.delete(zombie)
-            del game_state.Zombie_Dict[zombie_ix]
-            game_state.score+=1
-            self.bonus_score +=1
+            if game_state.Zombie_Dict[zombie_ix].health <= 0:
+                game_config.canvas.delete(zombie)
+                del game_state.Zombie_Dict[zombie_ix]
+                game_state.score+=1
+                self.bonus_score +=1
 
         # Kill the devils that have run out of health
         for devil_ix in kill_devil:
@@ -104,7 +112,7 @@ class Blockshead(object):
 
         game_config.canvas.update()
 
-    def key(self, key, game_config, game_state):
+    def key(self, key, window, game_config, game_state):
         B_move_length = game_config.B_move_length
         if key == 'w':
             self.x_vel = 0
@@ -123,13 +131,16 @@ class Blockshead(object):
             self.y_vel = 0
             self.direction = Direction.RIGHT
         elif key == 'space':
-            self.fire_gun(game_config, game_state)
+            self.fire_gun(window, game_config, game_state)
         elif key == '1':
             self.gun = "Pistol"
             self.ammo = 'Infinite'
         elif key == '2':
+            self.gun = "Uzi"
+            self.ammo = 50
+        elif key == '8':
             self.gun = 'Fireball'
-            self.ammo = 'Infinite'
+            self.ammo = 10
 
     def keyup(self, key):
         if key in ['w', 's']:
@@ -156,6 +167,7 @@ class Zombie(object):
         self.y = random.randrange(window.y_start,window.y_end)
         
         self.zombie = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
+        self.health = 50
         self.cooldown = 0
 
     def move(self, target, window, game_config, game_state):
