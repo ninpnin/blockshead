@@ -52,6 +52,7 @@ class GameState:
     healthboxes = []
     score: int = 0
     level: int = 1
+    Zombie_Buffer = 10
 
 @dataclass
 class Shots:

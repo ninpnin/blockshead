@@ -93,12 +93,12 @@ def new_level(game_config, game_state, window):
     """For every new level all of the Devils and Zombies have been killed so new ones need to be created. Each time 70% more Zombies are added"""
     build_zombie = 0
     build_devil = 0
-    for i in range(game_config.Number_of_Zombies):
+    for i in range(game_config.Number_of_Zombies + game_state.level // 2):
         z = Zombie(window, game_config)
         game_state.Zombie_Dict[build_zombie] = z
         build_zombie += 1
 
-    for i in range(int(game_config.Number_of_Zombies / 5)):
+    for i in range(game_config.Number_of_Zombies // 5 + game_state.level // 3):
         D = Devil(window, game_config)
         game_state.Devil_Dict[build_devil] = D
         build_devil +=1
