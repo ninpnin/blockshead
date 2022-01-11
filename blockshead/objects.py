@@ -46,6 +46,10 @@ class DevilAttack(object):
             self.y_vel -= .75
         self.life_span = 125
 
+        if self.x_vel == 0 or self.y_vel == 0:
+            self.x_vel, self.y_vel = self.x_vel * 2, self.y_vel * 2
+        else:
+            self.x_vel, self.y_vel = self.x_vel * 1.41, self.y_vel * 1.41
     def move(self, canvas, target):
         self.x += self.x_vel
         self.y += self.y_vel
@@ -65,7 +69,7 @@ class Pistol:
         self.direction = blockshead.direction
         x_vel, y_vel = blockshead.direction.value
         self.range = 100
-        self.damage = 26
+        self.damage = 11
         self.radius = 30
         self.shoot_x_start = x_vel * 10 + blockshead.x
         self.shoot_x_end = x_vel * self.range + blockshead.x + 1
@@ -89,7 +93,7 @@ class Pistol:
             cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
             cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
             if cond_x and cond_y:
-                Zombie.health -= self.damage
+                Zombie.injure(self.damage)
                 killed_zombies.append(zombie_ix)
 
         # Calculate damage inflicted on devils
@@ -98,7 +102,7 @@ class Pistol:
             cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
 
             if cond_x and cond_y:
-                Zombie.health -= self.damage # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
+                Zombie.injure(self.damage) # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
                 killed_devils.append(devil_ix)
 
         return killed_zombies, killed_devils
@@ -135,7 +139,7 @@ class Uzi:
         self.direction = blockshead.direction
         x_vel, y_vel = blockshead.direction.value
         self.range = 250
-        self.damage = 26
+        self.damage = 11
         self.radius = 30
         self.shoot_x_start = x_vel * 10 + blockshead.x
         self.shoot_x_end = x_vel * self.range + blockshead.x + 1
@@ -158,7 +162,7 @@ class Uzi:
             cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
             cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
             if cond_x and cond_y:
-                Zombie.health -= self.damage
+                Zombie.injure(self.damage)
                 killed_zombies.append(zombie_ix)
 
         # Calculate damage inflicted on devils
@@ -167,7 +171,7 @@ class Uzi:
             cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
 
             if cond_x and cond_y:
-                Zombie.health -= self.damage # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
+                Zombie.injure(self.damage) # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
                 killed_devils.append(devil_ix)
 
         return killed_zombies, killed_devils
@@ -251,7 +255,7 @@ class Fireball:
         # Calculate damage inflicted on regular zombies
         for zombie_ix, Zombie in game_state.Zombie_Dict.items():
             if abs(Zombie.x - self.x) < 10 and abs(Zombie.y - self.y) < 10:
-                Zombie.health -= self.damage 
+                Zombie.injure(self.damage)
                 self.delete(game_config, game_state)
                 killed_zombies.append(zombie_ix)
                 return killed_zombies, killed_devils
@@ -259,7 +263,7 @@ class Fireball:
         # Calculate damage inflicted on devils
         for devil_ix, Zombie in game_state.Devil_Dict.items():
             if abs(Zombie.x - self.x) < 10 and abs(Zombie.y - self.y) < 10:
-                Zombie.health -= self.damage 
+                Zombie.injure(self.damage)
                 self.delete(game_config, game_state)
                 killed_devils.append(devil_ix)
                 return killed_zombies, killed_devils

@@ -86,7 +86,7 @@ class Blockshead(object):
         if self.cooldown == 0:
             if self.gun == "Pistol":
                 shot = Pistol(game_config, game_state)
-                self.cooldown = 10
+                self.cooldown = 20
                 game_state.shots.add(shot)
             elif self.gun == "Uzi":
                 if game_state.blockshead.ammo > 0:
@@ -184,12 +184,13 @@ class Zombie(object):
         for direction in Direction:
             self.images[direction] = PhotoImage(file = "images/zombies/z{}.png".format(direction.name.lower())) # the 8 Devil images
 
-        self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2))) # create Zombies in the left half of the arena
+        self.x = random.randrange(window.x_start, window.x_end // 3) # create Zombies in the left half of the arena
         self.y = random.randrange(window.y_start,window.y_end)
         
         self.zombie = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
         self.health = 50
         self.cooldown = 0
+        self.injury_cooldown = 0
 
     def move(self, target, window, game_config, game_state):
         """
@@ -198,6 +199,12 @@ class Zombie(object):
         avoid having all of the Zombies stack up on top of each other and froming one really dense Zombie.
         That is what the really long line of code below is testing
         """
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        if self.injury_cooldown > 0:
+            self.injury_cooldown -= 1
+            return
+
 
         self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
         self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
@@ -228,19 +235,13 @@ class Zombie(object):
         if abs(next_x - target.x) < self.radius and abs(next_y - target.y) < self.radius:
             self.x_vel, self.y_vel = 0, 0
 
-        if self.x >= window.width - 25: # x coords
-            self.x_vel = -game_config.Zombie_per_move
-        if self.x <= 0 + 5:
-            self.x_vel = game_config.Zombie_per_move
-        if self.y >= window.height - 25:# y coords
-            self.y_vel = -game_config.Zombie_per_move
-        if self.y <= 0 + 5:
-            self.y_vel = game_config.Zombie_per_move
         self.y += self.y_vel
         self.x += self.x_vel
              # move the Zombie accordingly based on if it should move or another Zombie is in its path
         if self.cooldown > 0:
             self.cooldown -= 1
+        if self.injury_cooldown > 0:
+            self.injury_cooldown -= 1
 
     # TODO: rename to draw
     def update_sprite(self, game_config):
@@ -268,13 +269,19 @@ class Zombie(object):
             target.health -= 1
             self.cooldown = 5
 
+    def injure(self, damage):
+        self.health -= damage
+        self.injury_cooldown = 5
+
 class Devil(object):
     """The Devil Class. They move faster than Zombies have more health and can attack Blockshead by colliding with him or by shooting him"""
     def __init__(self, window, game_config):
-        self.x = random.randrange(window.x_start,(window.x_end-(window.x_end / 2)))
+        # create Devils in the left half of the arena
+        self.x = random.randrange(window.x_start, window.x_end // 3)
         self.y = random.randrange(window.y_start,window.y_end)
         self.direction = Direction.UP
         self.cooldown = 0
+        self.injury_cooldown = 0
         self.attack_fire = 0
         self.health = 100
         self.images = {}
@@ -284,6 +291,12 @@ class Devil(object):
         self.devil = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
 
     def move(self, target, window, game_config, game_state):
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        if self.injury_cooldown > 0:
+            self.injury_cooldown -= 1
+            return
+
         """The Devil's movement is the same as the Zombies except that Devils move faster"""
         self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
         self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
@@ -292,42 +305,21 @@ class Devil(object):
         next_x = self.x + self.x_vel
         next_y = self.y + self.y_vel
 
-        for zombie in game_state.Zombie_Dict.values():
-            if abs(next_x - zombie.x) < self.radius and abs(next_y - zombie.y) < self.radius:
-                if abs(self.x - zombie.x) >= self.radius:
-                    self.x_vel = 0
-                elif abs(self.y - zombie.y) >= self.radius:
-                    self.y_vel = 0
-                else:
-                    self.x_vel, self.y_vel = 0, 0
+        potential_collisions = list(game_state.Zombie_Dict.values())
+        potential_collisions += list(game_state.Devil_Dict.values()) + [target]
 
-        for devil in game_state.Devil_Dict.values():
-            if devil != self:
-                if abs(next_x - devil.x) < self.radius and abs(next_y - devil.y) < self.radius:
-                    if abs(self.x - devil.x) >= self.radius:
+        for entity in potential_collisions:
+            if entity != self:
+                if abs(next_x - entity.x) < self.radius and abs(next_y - entity.y) < self.radius:
+                    if abs(self.x - entity.x) >= self.radius:
                         self.x_vel = 0
-                    elif abs(self.y - devil.y) >= self.radius:
+                    elif abs(self.y - entity.y) >= self.radius:
                         self.y_vel = 0
                     else:
                         self.x_vel, self.y_vel = 0, 0
         
-        if abs(next_x - target.x) < self.radius and abs(next_y - target.y) < self.radius:
-            self.x_vel, self.y_vel = 0, 0
-
-        if self.x >= window.width - 25: # x coords
-            self.x_vel = -game_config.Zombie_per_move
-        if self.x <= 0 + 5:
-            self.x_vel = game_config.Zombie_per_move
-        if self.y >= window.height - 25:# y coords
-            self.y_vel = -game_config.Zombie_per_move
-        if self.y <= 0 + 5:
-            self.y_vel = game_config.Zombie_per_move
-
         self.y += self.y_vel
         self.x += self.x_vel
-
-        if self.cooldown > 0:
-            self.cooldown -= 1
 
     def update_sprite(self, game_config):
         """Update the Zombie image based on which of the 8 directions that it is traveling in"""
@@ -354,6 +346,10 @@ class Devil(object):
             self.cooldown = 5
 
     def attack(self, target, game_config, game_state):
+        # Only attack if hasn't been recently shot at
+        if self.injury_cooldown > 0:
+            return
+
         """If the Devil is within +/- 200 pixels in the X and Y directions then it shoots a fireball at blockshead 1 time and then waits 45 loops to shoot agian"""
         if abs(target.x - self.x) < 200 and abs(target.y - self.y) < 200 and self.attack_fire > 45:
             d_attack = DevilAttack(self.x,self.y,self.x_vel,self.y_vel, game_config.canvas)
@@ -363,3 +359,6 @@ class Devil(object):
         else:
             self.attack_fire += 1
 
+    def injure(self, damage):
+        self.health -= damage
+        self.injury_cooldown = 5
