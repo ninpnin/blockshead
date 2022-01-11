@@ -145,6 +145,7 @@ class Uzi:
         self.image = canvas.create_rectangle(self.shoot_x_start,self.shoot_y_start,self.shoot_x_end,self.shoot_y_end,fill="Red") # create the bullet
 
         self.attacked = False
+        playsound('audio/uzi.wav', False)
 
     def contact(self, game_config, game_state):
         killed_zombies, killed_devils = [], []
@@ -215,6 +216,8 @@ class Fireball:
         game_state.blockshead.ammo = max(0, game_state.blockshead.ammo - 1)
 
         self.damage = 35
+
+        playsound('audio/fireball.wav', False)
 
     def on_canvas(self):
         # TODO: fix coordinates based on game_config or window
