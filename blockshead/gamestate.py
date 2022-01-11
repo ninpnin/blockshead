@@ -48,8 +48,9 @@ class GameState:
     Devil_Dict = {} # same as Zombie_Dict but for Devils
     Dead_Zombie_List = []
     Devil_Attack_Dict = {} # The spheres that the Devils can attack with
-    blood_dict = {}
+    blood_marks = set()
     healthboxes = []
+    fakewalls = []
     score: int = 0
     level: int = 1
     Zombie_Buffer = 10

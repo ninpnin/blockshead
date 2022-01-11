@@ -25,6 +25,14 @@ class Blood(object):
         self.blood_spot = game_config.canvas.create_image(x,y,image = self.image)
         game_config.canvas.tag_lower(self.blood_spot)
         game_config.canvas.tag_lower(game_config.background)
+        self.level_lifetime = 2
+
+    def levelup(self, game_config, game_state):
+        self.level_lifetime -= 1
+        if self.level_lifetime <= 0:
+            game_config.canvas.delete(self.image)
+            game_state.blood_marks.remove(self)
+
 
 class DevilAttack(object):
     """The yellow circle that the devils use to attack Blockshead. It has a life span of 125 timesteps.
@@ -274,21 +282,38 @@ class Fireball:
 class Healthbox(object):
     """Static object for drawing blood on the ground"""
     def __init__(self, window, game_config):
-        print("Healthbox...")
         self.x = random.randrange(window.x_start, window.x_end) # create Zombies in the left half of the arena
         self.y = random.randrange(window.y_start, window.y_end)
-        print(self.x, self.y)
         self.image = PhotoImage(file = "images/game_elements/healthbox.png")
         self.image_ref = game_config.canvas.create_image(self.x, self.y, image=self.image)
         self.radius = 25
+        self.type = random.choice(["health", "ammo"])
         self.health = 25
+
         
     def update(self, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
         canvas = game_config.canvas
 
         if abs(game_state.blockshead.x - self.x) < self.radius and abs(game_state.blockshead.y - self.y) < self.radius:
-            game_state.blockshead.health = min(100, game_state.blockshead.health + self.health)
+            
+            if self.type == "health":
+                game_state.blockshead.health = min(100, game_state.blockshead.health + self.health)
+            elif self.type == "ammo":
+                if type(game_state.blockshead.ammo) == int:
+                    game_state.blockshead.ammo += 10
+
             game_state.healthboxes.pop(game_state.healthboxes.index(self))
             game_config.canvas.delete(self.image_ref)
+
+
+class Fakewall(object):
+    """Static object for drawing blood on the ground"""
+    def __init__(self, window, game_config):
+        self.x = random.randrange(window.x_start, window.x_end) # create Zombies in the left half of the arena
+        self.y = random.randrange(window.y_start, window.y_end)
+        self.image = PhotoImage(file = "images/game_elements/fakewall80.png")
+        self.image_ref = game_config.canvas.create_image(self.x, self.y, image=self.image)
+        game_config.canvas.tag_lower(self.image_ref)
+        game_config.canvas.tag_lower(game_config.background)
 

@@ -103,8 +103,14 @@ def new_level(game_config, game_state, window):
         game_state.Devil_Dict[build_devil] = D
         build_devil +=1
 
+    for bm in list(game_state.blood_marks):
+        bm.levelup(game_config, game_state)
+
     hb = Healthbox(window, game_config)
+    fw = Fakewall(window, game_config)
+
     game_state.healthboxes.append(hb)
+    game_state.fakewalls.append(fw)
     game_state.blockshead.health = min(100, 5 + game_state.blockshead.health) 
     game_state.blockshead.mine_count += int(game_config.Number_of_Zombies / 5)
     game_state.level += 1

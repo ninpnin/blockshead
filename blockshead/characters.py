@@ -64,6 +64,10 @@ class Blockshead(object):
             if min_x <= devil.x <= max_x and min_y <= devil.y <= max_y:
                 self.x_vel, self.y_vel = 0, 0
 
+        for fakewall in game_state.fakewalls:
+            if min_x <= fakewall.x <= max_x and min_y <= fakewall.y <= max_y:
+                self.x_vel, self.y_vel = 0, 0
+
         self.x += self.x_vel
         self.y += self.y_vel
         self.cooldown = max(0, self.cooldown - 1)
@@ -109,8 +113,7 @@ class Blockshead(object):
         for zombie_ix in kill_list:
             zombie = game_state.Zombie_Dict[zombie_ix]
             mark = Blood(zombie.x, zombie.y,game_config)
-            game_state.blood_dict[game_state.blood_marks] = mark
-            game_state.blood_marks +=1
+            game_state.blood_marks.add(mark)
             if game_state.Zombie_Dict[zombie_ix].health <= 0:
                 game_config.canvas.delete(zombie)
                 del game_state.Zombie_Dict[zombie_ix]
@@ -121,8 +124,7 @@ class Blockshead(object):
         for devil_ix in kill_devil:
             devil = game_state.Devil_Dict[devil_ix]
             mark = Blood(devil.x, devil.y,game_config)
-            game_state.blood_dict[game_state.blood_marks] = mark
-            game_state.blood_marks +=1
+            game_state.blood_marks.add(mark)
             if game_state.Devil_Dict[devil_ix].health <= 0:
                 game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
                 del game_state.Devil_Dict[devil_ix]
@@ -213,27 +215,19 @@ class Zombie(object):
         next_x = self.x + self.x_vel
         next_y = self.y + self.y_vel
 
-        for zombie in game_state.Zombie_Dict.values():
-            if zombie != self:
-                if abs(next_x - zombie.x) < self.radius and abs(next_y - zombie.y) < self.radius:
-                    if abs(self.x - zombie.x) >= self.radius:
+        potential_collisions = list(game_state.Zombie_Dict.values())
+        potential_collisions += list(game_state.Devil_Dict.values()) + [target]
+        potential_collisions += game_state.fakewalls
+
+        for entity in potential_collisions:
+            if entity != self:
+                if abs(next_x - entity.x) < self.radius and abs(next_y - entity.y) < self.radius:
+                    if abs(self.x - entity.x) >= self.radius:
                         self.x_vel = 0
-                    elif abs(self.y - zombie.y) >= self.radius:
+                    elif abs(self.y - entity.y) >= self.radius:
                         self.y_vel = 0
                     else:
                         self.x_vel, self.y_vel = 0, 0
-
-        for devil in game_state.Devil_Dict.values():
-            if abs(next_x - devil.x) < self.radius and abs(next_y - devil.y) < self.radius:
-                if abs(self.x - devil.x) >= self.radius:
-                    self.x_vel = 0
-                elif abs(self.y - devil.y) >= self.radius:
-                    self.y_vel = 0
-                else:
-                    self.x_vel, self.y_vel = 0, 0
-        
-        if abs(next_x - target.x) < self.radius and abs(next_y - target.y) < self.radius:
-            self.x_vel, self.y_vel = 0, 0
 
         self.y += self.y_vel
         self.x += self.x_vel
