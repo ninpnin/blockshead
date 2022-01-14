@@ -112,21 +112,21 @@ class Blockshead(object):
         # Kill the zombies that have run out of health
         for zombie_ix in kill_list:
             zombie = game_state.Zombie_Dict[zombie_ix]
-            mark = Blood(zombie.x, zombie.y,game_config)
-            game_state.blood_marks.add(mark)
             if game_state.Zombie_Dict[zombie_ix].health <= 0:
                 game_config.canvas.delete(zombie)
                 del game_state.Zombie_Dict[zombie_ix]
+                mark = Blood(zombie.x, zombie.y,game_config)
+                game_state.blood_marks.add(mark)
                 game_state.score+=1
                 self.bonus_score +=1
 
         # Kill the devils that have run out of health
         for devil_ix in kill_devil:
             devil = game_state.Devil_Dict[devil_ix]
-            mark = Blood(devil.x, devil.y,game_config)
-            game_state.blood_marks.add(mark)
             if game_state.Devil_Dict[devil_ix].health <= 0:
                 game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
+                mark = Blood(devil.x, devil.y,game_config)
+                game_state.blood_marks.add(mark)
                 del game_state.Devil_Dict[devil_ix]
                 game_state.score+=1
                 self.bonus_score +=1

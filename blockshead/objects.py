@@ -21,7 +21,7 @@ class Direction(Enum):
 class Blood(object):
     """Static object for drawing blood on the ground"""
     def __init__(self,x,y, game_config):
-        self.image = PhotoImage(file = "images/game_elements/blood.png")
+        self.image = PhotoImage(file = "images/game_elements/blood.gif")
         self.blood_spot = game_config.canvas.create_image(x,y,image = self.image)
         game_config.canvas.tag_lower(self.blood_spot)
         game_config.canvas.tag_lower(game_config.background)
