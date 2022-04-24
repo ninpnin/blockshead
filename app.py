@@ -9,50 +9,70 @@ from blockshead.characters import Blockshead, Zombie, Devil
 from blockshead.objects import *
 import numpy as np
 
+import pygame
+
 def initialize_game():
+    pygame.init()
+
+    screen = pygame.display.set_mode([1000, 750])
+    game_config = GameConfig(canvas=None)
+
+    # Background
+    screen.fill(game_config.background_color)
+    """
     window = WindowProperties(height=750, width=1000, x_buffer=40, y_buffer=40)
     window.x_start = 2 * window.x_buffer - 20
     window.y_start = 3 * window.y_buffer - 35
     window.x_end = window.width - window.x_buffer - 20
     window.y_end = window.height - window.y_buffer - 20
-
+    
     canvas = tk.Canvas(highlightthickness=0, height=window.height, width=window.width)
     canvas.master.title("Blockshead")
     canvas.pack()
     
+    
     init_state = InitState()
-    game_config = GameConfig(canvas=canvas)
     game_state = GameState()
-
+    """
     # Background
+    """
     background = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
     game_config.background = background
-
+    """
     # Blockshead
-    game_state.blockshead = Blockshead(window, game_config)
-    game_state.stats = None
-
+    #game_state.blockshead = Blockshead(pygame.display, game_config)
+    #game_state.stats = None
+    
     # Borders
+    """
     canvas.create_rectangle(0,0,(window.x_buffer),(window.y_buffer+window.height), fill="Black") # create all of the buffer images
     canvas.create_rectangle((window.x_buffer+window.width),0,(window.width-(window.x_buffer)),((2*window.y_buffer)+window.height), fill="Black")
     canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
     canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
+    """
 
     # Start screen
+    """
     init_state.startscreen = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
     init_state.starttext = canvas.create_text(window.width // 2, window.height // 2, text="Start game by pressing 'G'", fill="Black", font=game_config.font)
+    """
 
     # Pause screen
+    """
     game_config.pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
     game_config.pausetext = canvas.create_text(window.width // 2, window.height // 2, text="Paused", fill="Black", font=game_config.font)
     canvas.itemconfigure(game_config.pausescreen, state='hidden')
     canvas.itemconfigure(game_config.pausetext, state='hidden')
+    """
 
     # Stats
+    """
     game_config.stats = canvas.create_text(200,65)
     canvas.create_rectangle(window.x_buffer,window.y_buffer,window.width - window.x_buffer,window.y_buffer+20,fill="Red")
+    """
 
-    return game_config, init_state, game_state, window
+    return None, None, None, screen
+    #return game_config, init_state, game_state, window
 
 def startgame(game_config, init_state, game_state, window):
     print("startgame")
@@ -134,9 +154,14 @@ def key_release(event, game_state):
     game_state.blockshead.keyup(released_character)
 
 def main_loop(game_config, init_state, game_state, window, levelup=False):
-    if not init_state.game_started:
-        init_state.game_started = True
+    pygame.display.flip()
+    dt = pygame.time.Clock().tick(60)
+    print(dt)
+    main_loop(game_config, init_state, game_state, window)
+    #if not init_state.game_started:
+    #    #init_state.game_started = True
 
+    """
     if game_state.blockshead.health <= 0:
         end_game(window, game_config, game_state)
     else:
@@ -174,12 +199,7 @@ def main_loop(game_config, init_state, game_state, window, levelup=False):
 
         canvas.update()
         canvas.after(5, lambda: main_loop(game_config, init_state, game_state, window, levelup))
-
+    """
 if __name__ == "__main__":
     game_config, init_state, game_state, window = initialize_game()
-    canvas = game_config.canvas
-    canvas.bind("<1>", lambda event: canvas.focus_set())
-    canvas.bind("<Key>", lambda event: key_press(event, game_config, init_state, game_state, window))
-
-    canvas.pack()
-    canvas.mainloop()
+    main_loop(game_config, init_state, game_state, window)
