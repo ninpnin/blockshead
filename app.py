@@ -27,6 +27,12 @@ def draw_stats(window, game_state):
     font = pygame.font.SysFont(None, 36)
     img = font.render(f'Level: {game_state.level}, Points: {game_state.score}', True, (100,100,100))
     window.blit(img, (20, 20))
+    
+    health = game_state.blockshead.health
+    pygame.draw.rect(window, (255,0,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, 100, 10))
+    healthbar_width = int(100 * health/100)
+    pygame.draw.rect(window, (0,128,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, healthbar_width, 10))
+
 
 def new_level(game_config, game_state, window):
     """
