@@ -1,11 +1,8 @@
 import numpy as np
-import tkinter as tk
-from tkinter import *
 import random
 import time
 import math
 from enum import Enum
-from playsound import playsound
 
 class Direction(Enum):
     UP = (0,-1)

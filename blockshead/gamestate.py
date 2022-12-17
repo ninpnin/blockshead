@@ -1,13 +1,6 @@
 from dataclasses import dataclass
 
 @dataclass
-class WindowProperties:
-    height: int
-    width: int
-    x_buffer: int
-    y_buffer: int
-
-@dataclass
 class GameConfig:
     B_move_length = 2 # Some the game attributes that change and are used for the initial setup. Most would be better in a central Game Class
     Zombie_per_move = .5
@@ -19,6 +12,8 @@ class GameConfig:
     Zombie_Buffer = 30
     background_color = "#EBDCC7"
     font = ('Helvetica','30','bold')
+    height: int
+    width: int
 
 @dataclass
 class Screen:
