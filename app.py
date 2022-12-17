@@ -5,6 +5,7 @@ import pygame
 
 def initialize_game():
     pygame.init()
+    pygame.display.set_caption('Blockshead')
     game_config = GameConfig(canvas=None, width=1000, height=750)
     screen = pygame.display.set_mode([game_config.width, game_config.height])
     game_state = GameState()
@@ -73,8 +74,6 @@ def handle_keys(event, window, game_config, game_state):
             elif game_state.blockshead.x_vel != 0:
                 game_state.blockshead.direction = Direction.LEFT
                 
-            
-
 def draw_screen(window, characters):
     for c in characters:
         img = c.get_image()
