@@ -90,3 +90,40 @@ class Pistol:
 
         return [], []
 
+
+class Healthbox(object):
+    """Static object for drawing blood on the ground"""
+    def __init__(self, window, game_config):
+        self.x = random.randrange(0, game_config.width) # create Zombies in the left half of the arena
+        self.y = random.randrange(0, game_config.height)
+        self.image = pygame.image.load("images/game_elements/healthbox.png")
+        self.radius = 25
+        self.type = random.choice(["health", "ammo"])
+        self.health = 25
+
+    def update(self, game_config, game_state):
+        """Fires whichever weapon that blockshead is using at the moment"""
+
+        if abs(game_state.blockshead.x - self.x) < self.radius and abs(game_state.blockshead.y - self.y) < self.radius:
+            
+            if self.type == "health":
+                game_state.blockshead.health = min(100, game_state.blockshead.health + self.health)
+            elif self.type == "ammo":
+                if type(game_state.blockshead.ammo) == int:
+                    game_state.blockshead.ammo += 10
+
+            game_state.healthboxes.pop(game_state.healthboxes.index(self))
+            game_config.canvas.delete(self.image_ref)
+
+
+class Fakewall(object):
+    def __init__(self, game_config):
+        self.x = random.randrange(0, game_config.width)
+        self.y = random.randrange(0, game_config.height)
+        self.image = pygame.image.load("images/game_elements/fakewall80.png")
+
+    def get_image(self):
+        return self.image
+
+    def get_coordinates(self):
+        return self.x, self.y

@@ -97,8 +97,12 @@ def draw_screen(window, characters):
         window.blit(img, c.get_coordinates())
     
 def main_loop(game_config, game_state, window, clock, levelup=False):
-    
     game_config, game_state, window = new_level(game_config, game_state, window)
+    
+    for _ in range(2):
+        wall = Fakewall(game_config)
+        game_state.fakewalls.append(wall)
+        
     while True:
         if len(game_state.zombies) == 0:
             game_config, game_state, window = new_level(game_config, game_state, window)
@@ -129,7 +133,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
                 
             # Draw characters and objects
             # NOTE: Order matters here
-            drawables = game_state.blood_marks + [game_state.blockshead] + game_state.zombies
+            drawables = game_state.blood_marks + game_state.fakewalls + [game_state.blockshead] + game_state.zombies
             draw_screen(window, drawables)
             draw_stats(window, game_state)
         else:

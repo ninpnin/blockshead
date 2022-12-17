@@ -34,7 +34,7 @@ class Blockshead(object):
         return self.images[self.direction]
 
     def _check_collisions(self, x, y, game_state, radius=30):
-        for zombie in game_state.zombies:
+        for zombie in game_state.zombies + game_state.fakewalls:
             dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
             if dist < radius:
                 return True
@@ -108,7 +108,7 @@ class Zombie(object):
         self.radius = 35
     
     def _check_collisions(self, x, y, game_state, radius=30):
-        for zombie in game_state.zombies + [game_state.blockshead]:
+        for zombie in game_state.zombies + game_state.fakewalls + [game_state.blockshead]:
             if zombie is self:
                 continue
             dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
