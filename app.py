@@ -5,7 +5,6 @@ import pygame
 
 def initialize_game():
     pygame.init()
-
     game_config = GameConfig(canvas=None, width=1000, height=750)
     screen = pygame.display.set_mode([game_config.width, game_config.height])
 
@@ -65,7 +64,6 @@ def draw_screen(window, characters):
     for c in characters:
         img = c.get_image()
         window.blit(img, c.get_coordinates())
-    pass
 
 def main_loop(game_config, init_state, game_state, window, blockshead, clock, levelup=False):
     
