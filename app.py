@@ -104,7 +104,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             window.fill(game_config.background_color)
             
             # Move characters
-            game_state.blockshead.move(game_config)
+            game_state.blockshead.move(game_config, game_state)
             for zombie in game_state.zombies:
                 zombie.move(window, game_config, game_state)
             

@@ -33,7 +33,14 @@ class Blockshead(object):
     def get_image(self):            
         return self.images[self.direction]
 
-    def move(self, game_config):
+    def _check_collisions(self, x, y, game_state, radius=40):
+        for zombie in game_state.zombies:
+            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
+            if dist < radius:
+                return True
+        return False
+
+    def move(self, game_config, game_state):
         # game area boundaries
         if (self.x >= game_config.width) and self.x_vel > 0:
             self.x_vel = 0
@@ -54,8 +61,10 @@ class Blockshead(object):
         radius = 5
         # TODO: collitions
         
-        self.x = next_x
-        self.y = next_y
+        if not self._check_collisions(next_x, next_y, game_state):
+            self.x = next_x
+            self.y = next_y
+
         self.cooldown = max(0, self.cooldown - 1)
 
     def get_coordinates(self):
@@ -81,7 +90,6 @@ class Blockshead(object):
                     game_state.shots.append(shot)
 
 class Zombie(object):
-    """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
     def __init__(self, window, game_config):
         self.direction = Direction.UP
         self.images = {}
@@ -89,13 +97,23 @@ class Zombie(object):
             # 8 different devil images
             self.images[direction] = pygame.image.load(f"images/zombies/z{direction.name.lower()}.png")
 
-        self.x = random.randrange(0,game_config.width // 3) # pick a random starting point on the right side of the field. Zombies start on the left half.
+        # pick a random starting point on the right side of the field. Zombies start on the left half.
+        self.x = random.randrange(0,game_config.width // 3)
         self.y = random.randrange(0,game_config.height)
 
         self.speed = 0.7
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0
+    
+    def _check_collisions(self, x, y, game_state, radius=40):
+        for zombie in game_state.zombies + [game_state.blockshead]:
+            if zombie is self:
+                continue
+            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
+            if dist < radius:
+                return True
+        return False
 
     def move(self, window, game_config, game_state):
         target = game_state.blockshead
@@ -105,29 +123,25 @@ class Zombie(object):
             self.injury_cooldown -= 1
             return
 
-        diff_x = self.x - target.x
-        if abs(diff_x) < self.speed * 2:
-            diff_x = 0
-        diff_y = self.y - target.y
-        if abs(diff_y) < self.speed * 2:
-            diff_y = 0
+        diff = np.array([self.x - target.x, self.y - target.y])
+        diff = diff / np.linalg.norm(diff) * self.speed
+        
+        for angle in [0, 30, -30, 60, -60, 90, -90, 120, -120, 150, -150]:
+            theta = np.radians(angle)
+            c, s = np.cos(theta), np.sin(theta)
+            R = np.array(((c, -s), (s, c)))
+            direction = R @ diff
+            next_x = self.x - direction[0]
+            next_y = self.y - direction[1]
+
+            collisions = self._check_collisions(next_x, next_y, game_state)
+            if not collisions:
+                break
             
-        self.x_vel = - np.sign(diff_x)
-        self.y_vel = - np.sign(diff_y)
-        self.radius = 25
-
-        speed = math.sqrt(self.x_vel ** 2 + self.y_vel ** 2)
-        if speed < 1.0:
-            speed = 1.0
-        speed = self.speed / speed
-        
-        next_x = self.x + self.x_vel * speed
-        next_y = self.y + self.y_vel * speed
-
-        # TODO: collisions
-        
         self.x = next_x
         self.y = next_y
+        
+            
         
         # Cooldown period for shooting
         if self.cooldown > 0:
