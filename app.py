@@ -81,7 +81,8 @@ def main_loop(game_config, init_state, game_state, window, blockshead, clock, le
 
         # Move characters
         blockshead.move(game_config)
-        #for 
+        for zombie in zombies:
+            zombie.move(blockshead, window, game_config, game_state)
         
         # Draw
         draw_screen(window, [blockshead] + zombies)

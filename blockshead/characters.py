@@ -74,7 +74,7 @@ class Zombie(object):
         self.x = random.randrange(0,game_config.width // 3) # pick a random starting point on the right side of the field. Zombies start on the left half.
         self.y = random.randrange(0,game_config.height)
 
-        self.speed = 1.2
+        self.speed = 0.7
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0
@@ -86,17 +86,29 @@ class Zombie(object):
             self.injury_cooldown -= 1
             return
 
-        self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
-        self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
+        diff_x = self.x - target.x
+        if abs(diff_x) < self.speed * 2:
+            diff_x = 0
+        diff_y = self.y - target.y
+        if abs(diff_y) < self.speed * 2:
+            diff_y = 0
+            
+        self.x_vel = - np.sign(diff_x)
+        self.y_vel = - np.sign(diff_y)
         self.radius = 25
 
-        next_x = self.x + self.x_vel * self.speed
-        next_y = self.y + self.y_vel * self.speed
+        speed = math.sqrt(self.x_vel ** 2 + self.y_vel ** 2)
+        if speed < 1.0:
+            speed = 1.0
+        speed = self.speed / speed
+        
+        next_x = self.x + self.x_vel * speed
+        next_y = self.y + self.y_vel * speed
 
         # TODO: collisions
         
-        self.y = next_x
-        self.x = next_y
+        self.x = next_x
+        self.y = next_y
         
         if self.cooldown > 0:
             self.cooldown -= 1
