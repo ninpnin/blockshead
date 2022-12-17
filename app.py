@@ -61,7 +61,9 @@ def handle_keys(event, window, game_config, game_state):
                 game_state.blockshead.direction = Direction.DOWN
                 
             if event.key == pygame.K_SPACE:
-                game_state.blockshead.fire_gun(window, game_config, game_state)
+                shot = game_state.blockshead.fire_gun(window, game_config, game_state)
+                if shot is not None:
+                    game_state.shots.append(shot)
 
         # Pause controls
         if event.key == pygame.K_p:
@@ -108,9 +110,18 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             for zombie in game_state.zombies:
                 zombie.move(window, game_config, game_state)
                 zombie.contact(game_state)
+
+            # Calculate attacks
+            for shot in list(game_state.shots):
+                shot.update(game_config, game_state)
+
+            game_state.zombies = [z for z in game_state.zombies if z.health >= 1]
+            game_state.shots = [s for s in game_state.shots if s.lifetime >= 1]
                 
             # Draw characters and objects
-            draw_screen(window, [game_state.blockshead] + game_state.zombies)
+            # NOTE: Order matters here
+            drawables = game_state.blood_marks + [game_state.blockshead] + game_state.zombies
+            draw_screen(window, drawables)
             draw_stats(window, game_state)
         else:
             draw_pause_screen(window, game_config)

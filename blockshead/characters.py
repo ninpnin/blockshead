@@ -77,17 +77,17 @@ class Blockshead(object):
             if self.gun == "Pistol":
                 shot = Pistol(game_config, game_state)
                 self.cooldown = 20
-                game_state.shots.append(shot)
+                return shot
             elif self.gun == "Uzi":
                 if game_state.blockshead.ammo > 0:
                     #shot = Uzi(game_config, game_state)
                     self.cooldown = 10
-                    game_state.shots.append(shot)
+                    return shot
             elif self.gun == "Fireball":
                 if game_state.blockshead.ammo > 0:
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 30
-                    game_state.shots.append(shot)
+                    return shot
 
 class Zombie(object):
     def __init__(self, window, game_config):
@@ -160,3 +160,10 @@ class Zombie(object):
             target.health -= 1
             self.cooldown = 10
             print(target.health)
+    
+    def injure(self, damage, game_state):
+        self.health -= damage
+        self.injury_cooldown = 5
+        if self.health <= 1:
+            blood_mark = Blood(self.x, self.y)
+            game_state.blood_marks.append(blood_mark)

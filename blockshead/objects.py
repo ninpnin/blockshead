@@ -17,15 +17,24 @@ class Direction(Enum):
 
 class Blood(object):
     """Static object for drawing blood on the ground"""
-    def __init__(self,x,y, game_config):
+    def __init__(self, x,y):
         self.image = pygame.image.load("images/game_elements/blood.gif")
         self.level_lifetime = 2
+        self.x = x
+        self.y = y
 
+    def get_coordinates(self):
+        return int(self.x), int(self.y)
+    
+    def get_image(self):
+        return self.image
+    """
     def levelup(self, game_config, game_state):
         self.level_lifetime -= 1
         if self.level_lifetime <= 0:
             game_config.canvas.delete(self.image)
             game_state.blood_marks.remove(self)
+    """
 
 """
 Weapons. These classes depict shots coming from the weapons.
@@ -49,51 +58,35 @@ class Pistol:
         mixer.music.load('audio/pistol.mp3')
         mixer.music.play()
 
-    def contact(self, game_config, game_state):
+    def contact(self, game_state):
         killed_zombies, killed_devils = [], []
 
         max_x, min_x = max(self.shoot_x_start, self.shoot_x_end), min(self.shoot_x_start, self.shoot_x_end)
         max_y, min_y = max(self.shoot_y_start, self.shoot_y_end), min(self.shoot_y_start, self.shoot_y_end)
         
         # Calculate damage inflicted on regular zombies
-        for zombie_ix, Zombie in game_state.Zombie_Dict.items():
-            cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
-            cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
+        killed_zombies = []
+        for zombie in game_state.zombies:
+            cond_x = min_x - self.radius <= zombie.x <= max_x + self.radius
+            cond_y = min_y - self.radius <= zombie.y <= max_y + self.radius
             if cond_x and cond_y:
-                Zombie.injure(self.damage)
-                killed_zombies.append(zombie_ix)
-
-        # Calculate damage inflicted on devils
-        for devil_ix, Zombie in game_state.Devil_Dict.items():
-            cond_x = min_x - self.radius <= Zombie.x <= max_x + self.radius
-            cond_y = min_y - self.radius <= Zombie.y <= max_y + self.radius
-
-            if cond_x and cond_y:
-                Zombie.injure(self.damage) # Lower the Devil's health by 26 so that it takes 4 shots to kill a Devil while 1 for a Zombie
-                killed_devils.append(devil_ix)
+                zombie.injure(self.damage, game_state)
+                killed_zombies.append(zombie)
 
         return killed_zombies, killed_devils
 
     def update(self, game_config, game_state):
-        """Fires whichever weapon that blockshead is using at the moment"""
-        canvas = game_config.canvas
-        if self.lifetime < 0:
-            canvas.delete(self.image)
-            canvas.update()
-            game_state.shots.remove(self)
-            return [], []
-
         self.lifetime -= 1
 
         # Update image width
         self.shoot_x_start = (self.shoot_x_start + self.shoot_x_end) // 2
         self.shoot_y_start = (self.shoot_y_start + self.shoot_y_end) // 2
-        canvas.coords(self.image, self.shoot_x_start,self.shoot_y_start,self.shoot_x_end,self.shoot_y_end)
-        canvas.update()
-
+        
+        # TODO: draw shot
+        
         if not self.attacked:
             self.attacked = True
-            return self.contact(game_config, game_state)
+            return self.contact(game_state)
 
         return [], []
 
