@@ -6,7 +6,7 @@ import pygame
 def initialize_game():
     pygame.init()
 
-    game_config = GameConfig(canvas=None, width=750, height=750)
+    game_config = GameConfig(canvas=None, width=1000, height=750)
     screen = pygame.display.set_mode([game_config.width, game_config.height])
 
     # Background
