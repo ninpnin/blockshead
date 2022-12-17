@@ -2,7 +2,7 @@ import pygame
 import random
 import numpy as np
 from .objects import Direction
-from .objects import Pistol, Uzi, Fireball, DevilAttack, Blood
+from .objects import Pistol, Blood
 import math
 
 class Blockshead(object):

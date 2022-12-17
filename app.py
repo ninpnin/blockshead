@@ -53,6 +53,10 @@ def handle_keys(event, blockshead):
         if event.key == pygame.K_DOWN:
             blockshead.y_vel = 1
             blockshead.direction = Direction.DOWN
+            
+        if event.key == pygame.K_SPACE:
+            print("shoot")
+            
     elif event.type == pygame.KEYUP:
         if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
             blockshead.x_vel = 0
