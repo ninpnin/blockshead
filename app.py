@@ -107,12 +107,17 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.blockshead.move(game_config, game_state)
             for zombie in game_state.zombies:
                 zombie.move(window, game_config, game_state)
-            
+                zombie.contact(game_state)
+                
             # Draw characters and objects
             draw_screen(window, [game_state.blockshead] + game_state.zombies)
             draw_stats(window, game_state)
         else:
             draw_pause_screen(window, game_config)
+        
+        if game_state.blockshead.health <= 0:
+            return
+        
         pygame.display.update()
         
 

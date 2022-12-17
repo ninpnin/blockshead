@@ -105,6 +105,7 @@ class Zombie(object):
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0
+        self.radius = 50
     
     def _check_collisions(self, x, y, game_state, radius=40):
         for zombie in game_state.zombies + [game_state.blockshead]:
@@ -141,8 +142,6 @@ class Zombie(object):
         self.x = next_x
         self.y = next_y
         
-            
-        
         # Cooldown period for shooting
         if self.cooldown > 0:
             self.cooldown -= 1
@@ -154,3 +153,10 @@ class Zombie(object):
 
     def get_image(self):            
         return self.images[self.direction]
+
+    def contact(self, game_state):
+        target = game_state.blockshead
+        if abs(target.x - self.x) < self.radius + 2 and abs(target.y - self.y) < self.radius + 2 and self.cooldown == 0:
+            target.health -= 1
+            self.cooldown = 5
+            print(target.health)
