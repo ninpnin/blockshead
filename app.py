@@ -2,6 +2,7 @@ from blockshead.gamestate import *
 from blockshead.characters import Blockshead, Zombie
 from blockshead.objects import *
 import pygame
+import math
 
 def initialize_game():
     pygame.init()
@@ -25,12 +26,12 @@ def pause_game(game_config, game_state):
 
 def end_game(window, game_config, game_state):
     # TODO: print text
-    end_text = 'Game Over!\nFinal Score: {}, Final Level: {}'.format(ceil(game_state.score), game_state.level -1)
+    end_text = f'Game Over!\nFinal Score: {math.ceil(game_state.score)}, Final Level: {game_state.level -1}'
     
-def update_stats(game_config, game_state):
-    # TODO: draw stats
-    game_config.canvas.delete(game_config.stats)
-    game_config.stats = game_config.canvas.create_text(230,52,text=score_board)
+def draw_stats(window, game_state):
+    font = pygame.font.SysFont(None, 36)
+    img = font.render(f'Points: {game_state.score}', True, (255,255,255))
+    window.blit(img, (20, 20))
 
 def new_level(game_config, game_state, window):
     """
@@ -84,10 +85,6 @@ def draw_screen(window, characters):
     for c in characters:
         img = c.get_image()
         window.blit(img, c.get_coordinates())
-
-    font = pygame.font.SysFont(None, 36)
-    img = font.render('hello', True, (255,255,255))
-    window.blit(img, (20, 20))
     
 def main_loop(game_config, init_state, game_state, window, clock, levelup=False):
     
@@ -111,6 +108,7 @@ def main_loop(game_config, init_state, game_state, window, clock, levelup=False)
         
         # Draw characters and objects
         draw_screen(window, [game_state.blockshead] + game_state.zombies)
+        draw_stats(window, game_state)
         pygame.display.update()
         
 
