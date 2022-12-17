@@ -3,6 +3,7 @@ import random
 import numpy as np
 from .objects import Direction
 from .objects import Pistol, Uzi, Fireball, DevilAttack, Blood
+import math
 
 class Blockshead(object):
     """The Blockshead charecter. Shoot, move, lay mines etc. are all contianed within the Blockshead class. Eventually all of the gun details need to be moved to thier own class so that Pistol = Gun(range,damage) and Mine = Gun(radius, damage)
@@ -27,11 +28,11 @@ class Blockshead(object):
         self.mine_count = 0 # how many mines are left
         self.bullet_images = []
         self.cooldown = 0
+        self.speed = 2.0
     
     def get_image(self):            
         return self.images[self.direction]
 
-    
     def move(self, game_config):
         # game area boundaries
         if (self.x >= game_config.width) and self.x_vel > 0:
@@ -44,25 +45,21 @@ class Blockshead(object):
         elif self.y <= 0 and self.y_vel < 0:
             self.y_vel = 0
 
-        next_x = self.x + self.x_vel * 2
-        next_y = self.y + self.y_vel * 2
+        speed = math.sqrt(self.x_vel ** 2 + self.y_vel ** 2)
+        if speed < 1.0:
+            speed = 1.0
+        speed = self.speed / speed
+        next_x = self.x + self.x_vel * speed
+        next_y = self.y + self.y_vel * speed
         radius = 5
-        max_x, min_x = max(next_x, self.x), max(next_x, self.x)
-        max_y, min_y = max(next_y, self.y), max(next_y, self.y)
-
-        if max_x == min_x:
-            max_x += radius
-            min_x -= radius
-        if max_y == min_y:
-            max_y += radius
-            min_y -= radius
-
         # TODO: collitions
         
-        self.x += self.x_vel
-        self.y += self.y_vel
+        self.x = next_x
+        self.y = next_y
         self.cooldown = max(0, self.cooldown - 1)
 
+    def get_coordinates(self):
+        return int(self.x), int(self.y)
     """
     def update_sprite(self, game_config):
         

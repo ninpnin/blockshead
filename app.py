@@ -55,14 +55,16 @@ def handle_keys(event, blockshead):
             blockshead.y_vel = 1
             blockshead.direction = Direction.DOWN
     elif event.type == pygame.KEYUP:
-        if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
+        if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
             blockshead.x_vel = 0
+        elif event.key in [pygame.K_UP, pygame.K_DOWN]:
             blockshead.y_vel = 0
+            
 
 def draw_screen(window, characters):
     for c in characters:
         img = c.get_image()
-        window.blit(img, (c.x, c.y))
+        window.blit(img, c.get_coordinates())
     pass
 
 def main_loop(game_config, init_state, game_state, window, blockshead, clock, levelup=False):
