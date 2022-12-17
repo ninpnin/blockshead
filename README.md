@@ -6,8 +6,8 @@ Simple 2D shooter game written in Python. To be ported to use pygame or similar 
 
 - [ ] Mechanics
   - [x] Moving the character
-  - [ ] health
-  - [ ] Shooting
+  - [x] health
+  - [x] Shooting
   - [x] Simple opponent AI
   - [x] Pausing the game
   - [ ] Obstacles
@@ -33,6 +33,6 @@ Simple 2D shooter game written in Python. To be ported to use pygame or similar 
 - [x] Refactoring overhaul of the codebase
   - [x] Minimize the use of global
   - [x] Remove while loops
-  - [ ] Use NumPy for coordinates
+  - [x] Use NumPy for coordinates
   - [x] Fix minor issues and inconsistancies 
 
