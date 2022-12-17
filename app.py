@@ -61,8 +61,18 @@ def handle_keys(event, window, game_config, game_state):
     elif event.type == pygame.KEYUP:
         if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
             game_state.blockshead.x_vel = 0
+            if game_state.blockshead.y_vel > 0:
+                game_state.blockshead.direction = Direction.DOWN
+            elif game_state.blockshead.y_vel != 0:
+                game_state.blockshead.direction = Direction.UP
+
         elif event.key in [pygame.K_UP, pygame.K_DOWN]:
             game_state.blockshead.y_vel = 0
+            if game_state.blockshead.x_vel > 0:
+                game_state.blockshead.direction = Direction.RIGHT
+            elif game_state.blockshead.x_vel != 0:
+                game_state.blockshead.direction = Direction.LEFT
+                
             
 
 def draw_screen(window, characters):
