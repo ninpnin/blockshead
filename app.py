@@ -9,60 +9,6 @@ def initialize_game():
     game_config = GameConfig(canvas=None, width=1000, height=750)
     screen = pygame.display.set_mode([game_config.width, game_config.height])
 
-    # Background
-    screen.fill(game_config.background_color)
-    """
-    window = WindowProperties(height=750, width=1000, x_buffer=40, y_buffer=40)
-    window.x_start = 2 * window.x_buffer - 20
-    window.y_start = 3 * window.y_buffer - 35
-    window.x_end = window.width - window.x_buffer - 20
-    window.y_end = window.height - window.y_buffer - 20
-    
-    canvas = tk.Canvas(highlightthickness=0, height=window.height, width=window.width)
-    canvas.master.title("Blockshead")
-    canvas.pack()
-    
-    
-    init_state = InitState()
-    game_state = GameState()
-    """
-    # Background
-    """
-    background = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
-    game_config.background = background
-    """
-    # Blockshead
-    #game_state.blockshead = Blockshead(pygame.display, game_config)
-    #game_state.stats = None
-    
-    # Borders
-    """
-    canvas.create_rectangle(0,0,(window.x_buffer),(window.y_buffer+window.height), fill="Black") # create all of the buffer images
-    canvas.create_rectangle((window.x_buffer+window.width),0,(window.width-(window.x_buffer)),((2*window.y_buffer)+window.height), fill="Black")
-    canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
-    canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
-    """
-
-    # Start screen
-    """
-    init_state.startscreen = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
-    init_state.starttext = canvas.create_text(window.width // 2, window.height // 2, text="Start game by pressing 'G'", fill="Black", font=game_config.font)
-    """
-
-    # Pause screen
-    """
-    game_config.pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
-    game_config.pausetext = canvas.create_text(window.width // 2, window.height // 2, text="Paused", fill="Black", font=game_config.font)
-    canvas.itemconfigure(game_config.pausescreen, state='hidden')
-    canvas.itemconfigure(game_config.pausetext, state='hidden')
-    """
-
-    # Stats
-    """
-    game_config.stats = canvas.create_text(200,65)
-    canvas.create_rectangle(window.x_buffer,window.y_buffer,window.width - window.x_buffer,window.y_buffer+20,fill="Red")
-    """
-
     return game_config, None, None, screen
 
 def startgame(game_config, init_state, game_state, window):
@@ -94,6 +40,21 @@ def new_level(game_config, game_state, window):
 
     return game_config, game_state
 
+def handle_keys(event, blockshead):
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_LEFT:
+            blockshead.x_vel = -1
+        if event.key == pygame.K_RIGHT:
+            blockshead.x_vel = 1
+        if event.key == pygame.K_UP:
+            blockshead.y_vel = -1
+        if event.key == pygame.K_DOWN:
+            blockshead.y_vel = 1
+    elif event.type == pygame.KEYUP:
+        if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
+            blockshead.x_vel = 0
+            blockshead.y_vel = 0
+
 def draw_screen(window, characters):
     for c in characters:
         img = c.get_image()
@@ -103,13 +64,18 @@ def draw_screen(window, characters):
 def main_loop(game_config, init_state, game_state, window, blockshead, clock, levelup=False):
     
     while True:
+        # Background
+        window.fill(game_config.background_color)
         dt = clock.tick(60)
-        print(dt)
+        #print(dt)
         # TODO: write logic
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-        
+            elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                handle_keys(event, blockshead)
+
+        blockshead.move(game_config)
         draw_screen(window, [blockshead])
         pygame.display.update()
         

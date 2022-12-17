@@ -30,17 +30,17 @@ class Blockshead(object):
     
     def get_image(self):
         return self.images[self.direction]
-    """
+
     
-    def move(self, window, canvas, game_state):
-        if (self.x >= window.x_end) and self.x_vel > 0:
+    def move(self, game_config):
+        if (self.x >= game_config.width) and self.x_vel > 0:
             self.x_vel = 0
-        elif self.x <= window.x_start and self.x_vel < 0:
+        elif self.x <= 0 and self.x_vel < 0:
             self.x_vel = 0
 
-        if (self.y >= window.y_end) and self.y_vel > 0:
+        if (self.y >= game_config.height) and self.y_vel > 0:
             self.y_vel = 0
-        elif self.y <= window.y_start and self.y_vel < 0:
+        elif self.y <= 0 and self.y_vel < 0:
             self.y_vel = 0
 
         next_x = self.x + self.x_vel * 2
@@ -56,22 +56,13 @@ class Blockshead(object):
             max_y += radius
             min_y -= radius
 
-        for zombie in game_state.Zombie_Dict.values():
-            if min_x <= zombie.x <= max_x and min_y <= zombie.y <= max_y:
-                self.x_vel, self.y_vel = 0, 0
-
-        for devil in game_state.Devil_Dict.values():
-            if min_x <= devil.x <= max_x and min_y <= devil.y <= max_y:
-                self.x_vel, self.y_vel = 0, 0
-
-        for fakewall in game_state.fakewalls:
-            if min_x <= fakewall.x <= max_x and min_y <= fakewall.y <= max_y:
-                self.x_vel, self.y_vel = 0, 0
-
+        # TODO: collitions
+        
         self.x += self.x_vel
         self.y += self.y_vel
         self.cooldown = max(0, self.cooldown - 1)
 
+    """
     def update_sprite(self, game_config):
         
         game_config.canvas.itemconfigure(self.image, image = self.images[self.direction])
