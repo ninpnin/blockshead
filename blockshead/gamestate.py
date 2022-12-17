@@ -34,7 +34,7 @@ class GameState:
     healthboxes = []
     fakewalls = []
     score: int = 0
-    level: int = 1
+    level: int = 0
 
 @dataclass
 class Shots:

@@ -25,7 +25,7 @@ def end_game(window, game_config, game_state):
     
 def draw_stats(window, game_state):
     font = pygame.font.SysFont(None, 36)
-    img = font.render(f'Points: {game_state.score}', True, (100,100,100))
+    img = font.render(f'Level: {game_state.level}, Points: {game_state.score}', True, (100,100,100))
     window.blit(img, (20, 20))
 
 def new_level(game_config, game_state, window):
@@ -33,15 +33,16 @@ def new_level(game_config, game_state, window):
     For every new level all of the Devils and Zombies have been killed so new ones need to be created.
     Each time 70% more Zombies are added
     """
-    
+    game_state.number_of_zombies += 1
     game_state.zombies = []
-    for _ in range(game_state.number_of_zombies):
-        game_state.zombies.append(Zombie(window, game_config))
-    # TODO: rewrite
+    while len(game_state.zombies) < game_state.number_of_zombies:
+        zombie = Zombie(window, game_config)
+        if not zombie._check_collisions(zombie.x, zombie.y, game_state):
+            game_state.zombies.append(zombie)
+    
+    game_state.level += 1
     
     return game_config, game_state, window
-
-    return game_config, game_state
 
 def handle_keys(event, window, game_config, game_state):
     if event.type == pygame.KEYDOWN:
@@ -93,6 +94,8 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
     
     game_config, game_state, window = new_level(game_config, game_state, window)
     while True:
+        if len(game_state.zombies) == 0:
+            game_config, game_state, window = new_level(game_config, game_state, window)
         dt = clock.tick(60)
         # Handle events
         for event in pygame.event.get():
