@@ -33,7 +33,7 @@ class Blockshead(object):
     def get_image(self):            
         return self.images[self.direction]
 
-    def _check_collisions(self, x, y, game_state, radius=40):
+    def _check_collisions(self, x, y, game_state, radius=30):
         for zombie in game_state.zombies:
             dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
             if dist < radius:
@@ -105,9 +105,9 @@ class Zombie(object):
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0
-        self.radius = 50
+        self.radius = 35
     
-    def _check_collisions(self, x, y, game_state, radius=40):
+    def _check_collisions(self, x, y, game_state, radius=30):
         for zombie in game_state.zombies + [game_state.blockshead]:
             if zombie is self:
                 continue
@@ -127,7 +127,7 @@ class Zombie(object):
         diff = np.array([self.x - target.x, self.y - target.y])
         diff = diff / np.linalg.norm(diff) * self.speed
         
-        for angle in [0, 30, -30, 60, -60, 90, -90, 120, -120, 150, -150]:
+        for angle in [0, 30, -30, 60, -60, 90, -90]:
             theta = np.radians(angle)
             c, s = np.cos(theta), np.sin(theta)
             R = np.array(((c, -s), (s, c)))
@@ -158,5 +158,5 @@ class Zombie(object):
         target = game_state.blockshead
         if abs(target.x - self.x) < self.radius + 2 and abs(target.y - self.y) < self.radius + 2 and self.cooldown == 0:
             target.health -= 1
-            self.cooldown = 5
+            self.cooldown = 10
             print(target.health)
