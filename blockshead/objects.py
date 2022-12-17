@@ -28,13 +28,9 @@ class Blood(object):
     
     def get_image(self):
         return self.image
-    """
-    def levelup(self, game_config, game_state):
+    
+    def levelup(self):
         self.level_lifetime -= 1
-        if self.level_lifetime <= 0:
-            game_config.canvas.delete(self.image)
-            game_state.blood_marks.remove(self)
-    """
 
 """
 Weapons. These classes depict shots coming from the weapons.

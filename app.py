@@ -44,6 +44,9 @@ def new_level(game_config, game_state, window):
     
     healthbox = Healthbox(game_config)
     game_state.healthboxes.append(healthbox)
+    
+    for blood_mark in game_state.blood_marks:
+        blood_mark.levelup()
         
     game_state.level += 1
     
@@ -133,6 +136,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.zombies = [z for z in game_state.zombies if z.health >= 1]
             game_state.shots = [s for s in game_state.shots if s.lifetime >= 1]
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
+            game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
             
             # Draw characters and objects
             # NOTE: Order matters here
