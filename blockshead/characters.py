@@ -60,67 +60,51 @@ class Blockshead(object):
 
     def get_coordinates(self):
         return int(self.x), int(self.y)
-    """
-    def update_sprite(self, game_config):
+
+
+class Zombie(object):
+    """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
+    def __init__(self, window, game_config):
+        self.direction = Direction.UP
+        self.images = {}
+        for direction in Direction:
+            # 8 different devil images
+            self.images[direction] = pygame.image.load(f"images/zombies/z{direction.name.lower()}.png")
+
+        self.x = random.randrange(0,game_config.width // 3) # pick a random starting point on the right side of the field. Zombies start on the left half.
+        self.y = random.randrange(0,game_config.height)
+
+        self.speed = 1.2
+        self.health = 50
+        self.cooldown = 0
+        self.injury_cooldown = 0
+
+    def move(self, target, window, game_config, game_state):
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        if self.injury_cooldown > 0:
+            self.injury_cooldown -= 1
+            return
+
+        self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
+        self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
+        self.radius = 25
+
+        next_x = self.x + self.x_vel * self.speed
+        next_y = self.y + self.y_vel * self.speed
+
+        # TODO: collisions
         
-        game_config.canvas.itemconfigure(self.image, image = self.images[self.direction])
-        game_config.canvas.coords(self.image,(self.x),(self.y))
+        self.y = next_x
+        self.x = next_y
+        
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        if self.injury_cooldown > 0:
+            self.injury_cooldown -= 1
 
-        # Health bar
-        width = int(40 * self.health / 100)
-        game_config.canvas.coords(self.healthbar,self.x -20 + width, self.y -55, self.x - 20, self.y - 60)
-        game_config.canvas.coords(self.healthbar_bg,self.x + 20, self.y -55, self.x - 20, self.y - 60)
-        game_config.canvas.tag_raise(self.healthbar_bg)
-        game_config.canvas.tag_raise(self.healthbar)
+    def get_coordinates(self):
+        return int(self.x), int(self.y)
 
-    def fire_gun(self, window, game_config, game_state):
-        self.bonus_score = 0
-        if self.cooldown == 0:
-            if self.gun == "Pistol":
-                shot = Pistol(game_config, game_state)
-                self.cooldown = 20
-                game_state.shots.add(shot)
-            elif self.gun == "Uzi":
-                if game_state.blockshead.ammo > 0:
-                    shot = Uzi(game_config, game_state)
-                    self.cooldown = 10
-                    game_state.shots.add(shot)
-            elif self.gun == "Fireball":
-                if game_state.blockshead.ammo > 0:
-                    shot = Fireball(window, game_config, game_state)
-                    self.cooldown = 30
-                    game_state.shots.add(shot)
-
-    def update_shots(self, game_config, game_state):
-        kill_list, kill_devil = [], []
-        for shot in list(game_state.shots):
-            killed_zombies, killed_devils = shot.update(game_config, game_state)
-            kill_list, kill_devil = kill_list + killed_zombies, kill_devil + killed_devils
-
-        # Kill the zombies that have run out of health
-        for zombie_ix in kill_list:
-            zombie = game_state.Zombie_Dict[zombie_ix]
-            if game_state.Zombie_Dict[zombie_ix].health <= 0:
-                game_config.canvas.delete(zombie)
-                del game_state.Zombie_Dict[zombie_ix]
-                mark = Blood(zombie.x, zombie.y,game_config)
-                game_state.blood_marks.add(mark)
-                game_state.score+=1
-                self.bonus_score +=1
-
-        # Kill the devils that have run out of health
-        for devil_ix in kill_devil:
-            devil = game_state.Devil_Dict[devil_ix]
-            if game_state.Devil_Dict[devil_ix].health <= 0:
-                game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
-                mark = Blood(devil.x, devil.y,game_config)
-                game_state.blood_marks.add(mark)
-                del game_state.Devil_Dict[devil_ix]
-                game_state.score+=1
-                self.bonus_score +=1
-
-            game_state.score += (self.bonus_score / 3)
-
-        game_config.canvas.update()
-
-    """
+    def get_image(self):            
+        return self.images[self.direction]

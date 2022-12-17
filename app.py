@@ -1,5 +1,5 @@
 from blockshead.gamestate import *
-from blockshead.characters import Blockshead
+from blockshead.characters import Blockshead, Zombie
 from blockshead.objects import *
 import pygame
 
@@ -66,7 +66,7 @@ def draw_screen(window, characters):
         window.blit(img, c.get_coordinates())
 
 def main_loop(game_config, init_state, game_state, window, blockshead, clock, levelup=False):
-    
+    zombies = [Zombie(window, game_config)]
     while True:
         # Background
         window.fill(game_config.background_color)
@@ -79,8 +79,12 @@ def main_loop(game_config, init_state, game_state, window, blockshead, clock, le
             elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 handle_keys(event, blockshead)
 
+        # Move characters
         blockshead.move(game_config)
-        draw_screen(window, [blockshead])
+        #for 
+        
+        # Draw
+        draw_screen(window, [blockshead] + zombies)
         pygame.display.update()
         
 
