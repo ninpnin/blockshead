@@ -30,7 +30,7 @@ class InitState:
 @dataclass
 class GameState:
     direction = 1
-    Number_of_Zombies = 5
+    number_of_zombies = 5
     total_devil_attacks = 0
     blood_marks = 0
     number_of_mines = 0

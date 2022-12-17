@@ -37,7 +37,13 @@ def new_level(game_config, game_state, window):
     For every new level all of the Devils and Zombies have been killed so new ones need to be created.
     Each time 70% more Zombies are added
     """
+    
+    game_state.zombies = []
+    for _ in range(game_state.number_of_zombies):
+        game_state.zombies.append(Zombie(window, game_config))
     # TODO: rewrite
+    
+    return game_config, game_state, window
 
     return game_config, game_state
 
@@ -79,8 +85,13 @@ def draw_screen(window, characters):
         img = c.get_image()
         window.blit(img, c.get_coordinates())
 
+    font = pygame.font.SysFont(None, 36)
+    img = font.render('hello', True, (255,255,255))
+    window.blit(img, (20, 20))
+    
 def main_loop(game_config, init_state, game_state, window, clock, levelup=False):
-    game_state.zombies.append(Zombie(window, game_config))
+    
+    game_config, game_state, window = new_level(game_config, game_state, window)
     while True:
         # Draw background
         window.fill(game_config.background_color)
