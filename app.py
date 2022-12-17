@@ -11,18 +11,13 @@ def initialize_game():
     screen = pygame.display.set_mode([game_config.width, game_config.height])
     game_state = GameState()
     game_state.blockshead = Blockshead(game_config)
-    return game_config, None, game_state, screen
+    return game_config, game_state, screen
 
-def startgame(game_config, init_state, game_state, window):
-    # TODO: implement
-    pass
-
-def pause_game(game_config, game_state):
-    # TODO: implement
-    if not game_state.paused:
-        pass
-    else:
-        pass
+def draw_pause_screen(window, game_config):
+    window.fill(game_config.background_color)
+    font = pygame.font.SysFont(None, 36)
+    img = font.render("Paused. Press 'P' to continue", True, (100,100,100))
+    window.blit(img, (20, 20))
 
 def end_game(window, game_config, game_state):
     # TODO: print text
@@ -30,7 +25,7 @@ def end_game(window, game_config, game_state):
     
 def draw_stats(window, game_state):
     font = pygame.font.SysFont(None, 36)
-    img = font.render(f'Points: {game_state.score}', True, (255,255,255))
+    img = font.render(f'Points: {game_state.score}', True, (100,100,100))
     window.blit(img, (20, 20))
 
 def new_level(game_config, game_state, window):
@@ -50,21 +45,27 @@ def new_level(game_config, game_state, window):
 
 def handle_keys(event, window, game_config, game_state):
     if event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_LEFT:
-            game_state.blockshead.x_vel = -1
-            game_state.blockshead.direction = Direction.LEFT
-        if event.key == pygame.K_RIGHT:
-            game_state.blockshead.x_vel = 1
-            game_state.blockshead.direction = Direction.RIGHT
-        if event.key == pygame.K_UP:
-            game_state.blockshead.y_vel = -1
-            game_state.blockshead.direction = Direction.UP
-        if event.key == pygame.K_DOWN:
-            game_state.blockshead.y_vel = 1
-            game_state.blockshead.direction = Direction.DOWN
-            
-        if event.key == pygame.K_SPACE:
-            game_state.blockshead.fire_gun(window, game_config, game_state)
+        if not game_state.paused:
+            # Game controls
+            if event.key == pygame.K_LEFT:
+                game_state.blockshead.x_vel = -1
+                game_state.blockshead.direction = Direction.LEFT
+            if event.key == pygame.K_RIGHT:
+                game_state.blockshead.x_vel = 1
+                game_state.blockshead.direction = Direction.RIGHT
+            if event.key == pygame.K_UP:
+                game_state.blockshead.y_vel = -1
+                game_state.blockshead.direction = Direction.UP
+            if event.key == pygame.K_DOWN:
+                game_state.blockshead.y_vel = 1
+                game_state.blockshead.direction = Direction.DOWN
+                
+            if event.key == pygame.K_SPACE:
+                game_state.blockshead.fire_gun(window, game_config, game_state)
+
+        # Pause controls
+        if event.key == pygame.K_p:
+            game_state.paused = not game_state.paused
             
     elif event.type == pygame.KEYUP:
         if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
@@ -86,14 +87,11 @@ def draw_screen(window, characters):
         img = c.get_image()
         window.blit(img, c.get_coordinates())
     
-def main_loop(game_config, init_state, game_state, window, clock, levelup=False):
+def main_loop(game_config, game_state, window, clock, levelup=False):
     
     game_config, game_state, window = new_level(game_config, game_state, window)
     while True:
-        # Draw background
-        window.fill(game_config.background_color)
         dt = clock.tick(60)
-
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -101,18 +99,24 @@ def main_loop(game_config, init_state, game_state, window, clock, levelup=False)
             elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 handle_keys(event, window, game_config, game_state)
 
-        # Move characters
-        game_state.blockshead.move(game_config)
-        for zombie in game_state.zombies:
-            zombie.move(window, game_config, game_state)
-        
-        # Draw characters and objects
-        draw_screen(window, [game_state.blockshead] + game_state.zombies)
-        draw_stats(window, game_state)
+        if not game_state.paused:
+            # Draw background
+            window.fill(game_config.background_color)
+            
+            # Move characters
+            game_state.blockshead.move(game_config)
+            for zombie in game_state.zombies:
+                zombie.move(window, game_config, game_state)
+            
+            # Draw characters and objects
+            draw_screen(window, [game_state.blockshead] + game_state.zombies)
+            draw_stats(window, game_state)
+        else:
+            draw_pause_screen(window, game_config)
         pygame.display.update()
         
 
 if __name__ == "__main__":
     clock = pygame.time.Clock()
-    game_config, init_state, game_state, window = initialize_game()
-    main_loop(game_config, init_state, game_state, window, clock)
+    game_config, game_state, window = initialize_game()
+    main_loop(game_config, game_state, window, clock)
