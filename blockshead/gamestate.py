@@ -16,18 +16,6 @@ class GameConfig:
     width: int
 
 @dataclass
-class Screen:
-    a: int
-
-@dataclass
-class InitState:
-    Zombie_Dict_Made = False # have the Zombies and Blockshead been created?
-    blockshead_made = False
-    Run_Game = True
-    New_Level = False
-    game_started = False
-
-@dataclass
 class GameState:
     direction = 1
     number_of_zombies = 5
