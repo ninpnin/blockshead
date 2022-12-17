@@ -22,9 +22,7 @@ class GameState:
     total_devil_attacks = 0
     blood_marks = 0
     number_of_mines = 0
-
     paused = False
-
     shots = []
     mines = []
     zombies = []

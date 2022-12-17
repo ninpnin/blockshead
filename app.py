@@ -35,10 +35,6 @@ def draw_stats(window, game_state):
 
 
 def new_level(game_config, game_state, window):
-    """
-    For every new level all of the Devils and Zombies have been killed so new ones need to be created.
-    Each time 70% more Zombies are added
-    """
     game_state.number_of_zombies += 1
     game_state.zombies = []
     while len(game_state.zombies) < game_state.number_of_zombies:
@@ -46,6 +42,9 @@ def new_level(game_config, game_state, window):
         if not zombie._check_collisions(zombie.x, zombie.y, game_state):
             game_state.zombies.append(zombie)
     
+    healthbox = Healthbox(game_config)
+    game_state.healthboxes.append(healthbox)
+        
     game_state.level += 1
     
     return game_config, game_state, window
@@ -124,16 +123,21 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
                 zombie.move(window, game_config, game_state)
                 zombie.contact(game_state)
 
-            # Calculate attacks
-            for shot in list(game_state.shots):
+            # Calculate interactions, attacks
+            for shot in game_state.shots:
                 shot.update(game_config, game_state)
+
+            for healthbox in game_state.healthboxes:
+                healthbox.update(game_config, game_state)
 
             game_state.zombies = [z for z in game_state.zombies if z.health >= 1]
             game_state.shots = [s for s in game_state.shots if s.lifetime >= 1]
-                
+            game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
+            
             # Draw characters and objects
             # NOTE: Order matters here
-            drawables = game_state.blood_marks + game_state.fakewalls + [game_state.blockshead] + game_state.zombies
+            drawables = game_state.blood_marks + game_state.fakewalls + game_state.healthboxes
+            drawables = drawables + [game_state.blockshead] + game_state.zombies
             draw_screen(window, drawables)
             draw_stats(window, game_state)
         else:
