@@ -44,12 +44,16 @@ def handle_keys(event, blockshead):
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_LEFT:
             blockshead.x_vel = -1
+            blockshead.direction = Direction.LEFT
         if event.key == pygame.K_RIGHT:
             blockshead.x_vel = 1
+            blockshead.direction = Direction.RIGHT
         if event.key == pygame.K_UP:
             blockshead.y_vel = -1
+            blockshead.direction = Direction.UP
         if event.key == pygame.K_DOWN:
             blockshead.y_vel = 1
+            blockshead.direction = Direction.DOWN
     elif event.type == pygame.KEYUP:
         if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
             blockshead.x_vel = 0

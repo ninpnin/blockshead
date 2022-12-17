@@ -10,9 +10,9 @@ class Blockshead(object):
     def __init__(self, game_config):
         self.images = {}
         self.images[Direction.UP] = pygame.image.load("images/blockshead/bhup.png") # PhotoImage(file = "images/blockshead/bhup.png") # The image changes if Blockshead is facing up down left right
-        self.images[Direction.DOWN] = None #PhotoImage(file = "images/blockshead/bhdown.png")
-        self.images[Direction.LEFT] = None #PhotoImage(file = "images/blockshead/bhleft.png")
-        self.images[Direction.RIGHT] = None #PhotoImage(file = "images/blockshead/bhright.png")
+        self.images[Direction.DOWN] = pygame.image.load("images/blockshead/bhdown.png")
+        self.images[Direction.LEFT] = pygame.image.load("images/blockshead/bhleft.png")
+        self.images[Direction.RIGHT] = pygame.image.load("images/blockshead/bhright.png")
         self.x = random.randrange(((game_config.width/2)+15),game_config.width) # pick a random starting point on the right side of the field. Zombies start on the left half.
         self.y = random.randrange(0,game_config.height)
         self.direction = Direction.UP
@@ -28,11 +28,12 @@ class Blockshead(object):
         self.bullet_images = []
         self.cooldown = 0
     
-    def get_image(self):
+    def get_image(self):            
         return self.images[self.direction]
 
     
     def move(self, game_config):
+        # game area boundaries
         if (self.x >= game_config.width) and self.x_vel > 0:
             self.x_vel = 0
         elif self.x <= 0 and self.x_vel < 0:
