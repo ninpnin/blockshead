@@ -7,8 +7,9 @@ def initialize_game():
     pygame.init()
     game_config = GameConfig(canvas=None, width=1000, height=750)
     screen = pygame.display.set_mode([game_config.width, game_config.height])
-
-    return game_config, None, None, screen
+    game_state = GameState()
+    game_state.blockshead = Blockshead(game_config)
+    return game_config, None, game_state, screen
 
 def startgame(game_config, init_state, game_state, window):
     # TODO: implement
@@ -39,29 +40,29 @@ def new_level(game_config, game_state, window):
 
     return game_config, game_state
 
-def handle_keys(event, blockshead):
+def handle_keys(event, window, game_config, game_state):
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_LEFT:
-            blockshead.x_vel = -1
-            blockshead.direction = Direction.LEFT
+            game_state.blockshead.x_vel = -1
+            game_state.blockshead.direction = Direction.LEFT
         if event.key == pygame.K_RIGHT:
-            blockshead.x_vel = 1
-            blockshead.direction = Direction.RIGHT
+            game_state.blockshead.x_vel = 1
+            game_state.blockshead.direction = Direction.RIGHT
         if event.key == pygame.K_UP:
-            blockshead.y_vel = -1
-            blockshead.direction = Direction.UP
+            game_state.blockshead.y_vel = -1
+            game_state.blockshead.direction = Direction.UP
         if event.key == pygame.K_DOWN:
-            blockshead.y_vel = 1
-            blockshead.direction = Direction.DOWN
+            game_state.blockshead.y_vel = 1
+            game_state.blockshead.direction = Direction.DOWN
             
         if event.key == pygame.K_SPACE:
-            print("shoot")
+            game_state.blockshead.fire_gun(window, game_config, game_state)
             
     elif event.type == pygame.KEYUP:
         if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
-            blockshead.x_vel = 0
+            game_state.blockshead.x_vel = 0
         elif event.key in [pygame.K_UP, pygame.K_DOWN]:
-            blockshead.y_vel = 0
+            game_state.blockshead.y_vel = 0
             
 
 def draw_screen(window, characters):
@@ -69,7 +70,7 @@ def draw_screen(window, characters):
         img = c.get_image()
         window.blit(img, c.get_coordinates())
 
-def main_loop(game_config, init_state, game_state, window, blockshead, clock, levelup=False):
+def main_loop(game_config, init_state, game_state, window, clock, levelup=False):
     zombies = [Zombie(window, game_config)]
     while True:
         # Background
@@ -81,20 +82,19 @@ def main_loop(game_config, init_state, game_state, window, blockshead, clock, le
             if event.type == pygame.QUIT:
                 return
             elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                handle_keys(event, blockshead)
+                handle_keys(event, window, game_config, game_state)
 
         # Move characters
-        blockshead.move(game_config)
+        game_state.blockshead.move(game_config)
         for zombie in zombies:
-            zombie.move(blockshead, window, game_config, game_state)
+            zombie.move(window, game_config, game_state)
         
         # Draw
-        draw_screen(window, [blockshead] + zombies)
+        draw_screen(window, [game_state.blockshead] + zombies)
         pygame.display.update()
         
 
 if __name__ == "__main__":
     clock = pygame.time.Clock()
     game_config, init_state, game_state, window = initialize_game()
-    blockshead = Blockshead(game_config)
-    main_loop(game_config, init_state, game_state, window, blockshead, clock)
+    main_loop(game_config, init_state, game_state, window, clock)

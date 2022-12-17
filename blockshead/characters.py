@@ -61,6 +61,24 @@ class Blockshead(object):
     def get_coordinates(self):
         return int(self.x), int(self.y)
 
+    def fire_gun(self, window, game_config, game_state):
+        """Fires whichever weapon that blockshead is using at the moment"""
+        self.bonus_score = 0
+        if self.cooldown == 0:
+            if self.gun == "Pistol":
+                shot = Pistol(game_config, game_state)
+                self.cooldown = 20
+                game_state.shots.add(shot)
+            elif self.gun == "Uzi":
+                if game_state.blockshead.ammo > 0:
+                    #shot = Uzi(game_config, game_state)
+                    self.cooldown = 10
+                    game_state.shots.add(shot)
+            elif self.gun == "Fireball":
+                if game_state.blockshead.ammo > 0:
+                    #shot = Fireball(window, game_config, game_state)
+                    self.cooldown = 30
+                    game_state.shots.add(shot)
 
 class Zombie(object):
     """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
@@ -79,7 +97,8 @@ class Zombie(object):
         self.cooldown = 0
         self.injury_cooldown = 0
 
-    def move(self, target, window, game_config, game_state):
+    def move(self, window, game_config, game_state):
+        target = game_state.blockshead
         if self.cooldown > 0:
             self.cooldown -= 1
         if self.injury_cooldown > 0:
@@ -110,6 +129,7 @@ class Zombie(object):
         self.x = next_x
         self.y = next_y
         
+        # Cooldown period for shooting
         if self.cooldown > 0:
             self.cooldown -= 1
         if self.injury_cooldown > 0:
