@@ -81,13 +81,13 @@ def draw_screen(window, characters):
         window.blit(img, c.get_coordinates())
 
 def main_loop(game_config, init_state, game_state, window, clock, levelup=False):
-    zombies = [Zombie(window, game_config)]
+    game_state.zombies.append(Zombie(window, game_config))
     while True:
-        # Background
+        # Draw background
         window.fill(game_config.background_color)
         dt = clock.tick(60)
-        #print(dt)
-        # TODO: write logic
+
+        # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
@@ -96,11 +96,11 @@ def main_loop(game_config, init_state, game_state, window, clock, levelup=False)
 
         # Move characters
         game_state.blockshead.move(game_config)
-        for zombie in zombies:
+        for zombie in game_state.zombies:
             zombie.move(window, game_config, game_state)
         
-        # Draw
-        draw_screen(window, [game_state.blockshead] + zombies)
+        # Draw characters and objects
+        draw_screen(window, [game_state.blockshead] + game_state.zombies)
         pygame.display.update()
         
 

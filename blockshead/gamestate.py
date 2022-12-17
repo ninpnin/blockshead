@@ -37,18 +37,16 @@ class GameState:
 
     paused = False
 
-    shots = set()
-    Mines_Dict = {} # holds all of the mines
-    Zombie_Dict = {} # Where the Zombies are kept - elements are deleted as Blockshead shoots them
-    Devil_Dict = {} # same as Zombie_Dict but for Devils
-    Dead_Zombie_List = []
-    Devil_Attack_Dict = {} # The spheres that the Devils can attack with
-    blood_marks = set()
+    shots = []
+    mines = []
+    zombies = []
+    devils = []
+    devil_attacks = []
+    blood_marks = []
     healthboxes = []
     fakewalls = []
     score: int = 0
     level: int = 1
-    Zombie_Buffer = 10
 
 @dataclass
 class Shots:

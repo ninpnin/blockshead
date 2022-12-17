@@ -68,17 +68,17 @@ class Blockshead(object):
             if self.gun == "Pistol":
                 shot = Pistol(game_config, game_state)
                 self.cooldown = 20
-                game_state.shots.add(shot)
+                game_state.shots.append(shot)
             elif self.gun == "Uzi":
                 if game_state.blockshead.ammo > 0:
                     #shot = Uzi(game_config, game_state)
                     self.cooldown = 10
-                    game_state.shots.add(shot)
+                    game_state.shots.append(shot)
             elif self.gun == "Fireball":
                 if game_state.blockshead.ammo > 0:
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 30
-                    game_state.shots.add(shot)
+                    game_state.shots.append(shot)
 
 class Zombie(object):
     """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
