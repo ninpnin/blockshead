@@ -84,6 +84,7 @@ class Blockshead(object):
                 if self.ammo() > 0:
                     shot = Uzi(game_config, game_state)
                     self.cooldown = 12
+                    self.ammo_dict["uzi"] = max(0, self.ammo_dict.get("uzi", 0) - 1)
                     return shot
             elif self.weapon == "fireball":
                 if game_state.blockshead.ammo > 0:

@@ -30,6 +30,8 @@ def draw_stats(window, game_state, game_config):
     window.blit(img, (20, 20))
     img = font.render(f'Weapon: {game_state.blockshead.weapon}', True, (100,100,100))
     window.blit(img, (20, 60))
+    img = font.render(f'Ammo: {game_state.blockshead.ammo()}', True, (100,100,100))
+    window.blit(img, (20, 100))
 
     # Right corner title
     font = pygame.font.SysFont(None, 36)
@@ -127,13 +129,14 @@ def draw_shots(window, game_state):
         s.draw(window)
 
 def update_weapons(game_config, game_state):
-    new_weapons = []
+    new_weapons, new_ammo = [], dict()
     for weapon, threshold in game_config.weapons.items():
-        if threshold and weapon not in game_state.available_weapons:
+        if game_state.multiplier > threshold and weapon not in game_state.available_weapons:
             print(f"New weapon: {weapon}")
             new_weapons.append(weapon)
+            new_ammo[weapon] = game_config.ammo[weapon]
     
-    return new_weapons
+    return new_weapons, new_ammo
     
 def main_loop(game_config, game_state, window, clock, levelup=False):
     game_config, game_state, window = new_level(game_config, game_state, window)
@@ -175,7 +178,10 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
             game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
             game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
-            game_state.available_weapons += update_weapons(game_config, game_state)
+            new_weapons, new_ammo = update_weapons(game_config, game_state)
+            game_state.available_weapons += new_weapons
+            for weapon in new_weapons:
+                game_state.blockshead.ammo_dict[weapon] = new_ammo[weapon]
             
             # Draw characters and objects
             # NOTE: Order matters here
