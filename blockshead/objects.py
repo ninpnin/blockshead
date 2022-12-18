@@ -64,8 +64,8 @@ class Pistol:
         # Calculate damage inflicted on regular zombies
         killed_zombies = []
         for zombie in game_state.zombies:
-            cond_x = min_x - self.radius <= zombie.x <= max_x + self.radius
-            cond_y = min_y - self.radius <= zombie.y <= max_y + self.radius
+            cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
+            cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
                 zombie.injure(self.damage, game_state)
 
@@ -122,8 +122,8 @@ class Uzi:
         # Calculate damage inflicted on regular zombies
         killed_zombies = []
         for zombie in game_state.zombies:
-            cond_x = min_x - self.radius <= zombie.x <= max_x + self.radius
-            cond_y = min_y - self.radius <= zombie.y <= max_y + self.radius
+            cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
+            cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
                 zombie.injure(self.damage, game_state)
 

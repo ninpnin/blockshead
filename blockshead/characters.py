@@ -186,7 +186,7 @@ class Zombie(object):
     
     def injure(self, damage, game_state):
         self.health -= damage
-        self.injury_cooldown = 7
+        self.injury_cooldown = 11
         if self.health <= 1:
             blood_mark = Blood(self.x, self.y)
             game_state.blood_marks.append(blood_mark)

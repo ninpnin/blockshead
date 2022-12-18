@@ -6,7 +6,7 @@ class GameConfig:
     background_color = "#EBDCC7"
     font = ('Helvetica','30','bold')
     weapons = {"pistol": 1, "uzi": 1, "shotgun": 1}
-    ammo = {"uzi": 50, "shotgun": 15}
+    ammo = {"uzi": 100, "shotgun": 20}
     multiplier_step = 0.0002
     max_health = 200
     height: int
