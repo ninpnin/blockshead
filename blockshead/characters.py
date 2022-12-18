@@ -6,21 +6,20 @@ from .objects import Pistol, Blood
 import math
 
 class Blockshead(object):
-    """The Blockshead charecter. Shoot, move, lay mines etc. are all contianed within the Blockshead class. Eventually all of the gun details need to be moved to thier own class so that Pistol = Gun(range,damage) and Mine = Gun(radius, damage)
-    eventually even Shotgun = Gun(range,damange,arc_width) and so on"""
     def __init__(self, game_config):
         self.images = {}
-        self.images[Direction.UP] = pygame.image.load("images/blockshead/bhup.png") # PhotoImage(file = "images/blockshead/bhup.png") # The image changes if Blockshead is facing up down left right
+        self.images[Direction.UP] = pygame.image.load("images/blockshead/bhup.png")
         self.images[Direction.DOWN] = pygame.image.load("images/blockshead/bhdown.png")
         self.images[Direction.LEFT] = pygame.image.load("images/blockshead/bhleft.png")
         self.images[Direction.RIGHT] = pygame.image.load("images/blockshead/bhright.png")
-        self.x = random.randrange(((game_config.width/2)+15),game_config.width) # pick a random starting point on the right side of the field. Zombies start on the left half.
-        self.y = random.randrange(0,game_config.height)
+        self.radius = 35
+        self.x = random.randrange(self.radius, game_config.width - self.radius)
+        self.y = random.randrange(self.radius, game_config.height - self.radius)
         self.direction = Direction.UP
         self.x_vel = 0
         self.y_vel = 0
         self.health = 100 # +5 health is added at the beginning of every level
-        self.gun = "Pistol"
+        self.gun = "pistol"
         self.ammo = "Infinite"
         self.pause = False
         self.bonus_score = 0
@@ -29,7 +28,6 @@ class Blockshead(object):
         self.bullet_images = []
         self.cooldown = 0
         self.speed = 2.0
-        self.radius = 35
     
     def get_image(self):            
         return self.images[self.direction]
@@ -75,16 +73,16 @@ class Blockshead(object):
         """Fires whichever weapon that blockshead is using at the moment"""
         self.bonus_score = 0
         if self.cooldown == 0:
-            if self.gun == "Pistol":
+            if self.gun == "pistol":
                 shot = Pistol(game_config, game_state)
                 self.cooldown = 30
                 return shot
-            elif self.gun == "Uzi":
+            elif self.gun == "uzi":
                 if game_state.blockshead.ammo > 0:
                     #shot = Uzi(game_config, game_state)
                     self.cooldown = 12
                     return shot
-            elif self.gun == "Fireball":
+            elif self.gun == "fireball":
                 if game_state.blockshead.ammo > 0:
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 45
@@ -107,6 +105,14 @@ class Zombie(object):
         self.cooldown = 0
         self.injury_cooldown = 0
         self.radius = 35
+        self.multiplier = 0.1
+        self.angles = [0, 30, -30, 60, -60, 90, -90]
+
+        # Randomize movement on enemy level
+        if random.choice([True, False, False]):
+            self.angles = [20] + self.angles
+        elif random.choice([True, False]):
+            self.angles = [-20] + self.angles
     
     def _check_collisions(self, x, y, game_state, radius=30):
         for zombie in game_state.zombies + game_state.fakewalls + [game_state.blockshead]:
@@ -128,7 +134,7 @@ class Zombie(object):
         diff = np.array([self.x - target.x, self.y - target.y])
         diff = diff / np.linalg.norm(diff) * self.speed
         
-        for angle in [0, 30, -30, 60, -60, 90, -90]:
+        for angle in self.angles:
             theta = np.radians(angle)
             c, s = np.cos(theta), np.sin(theta)
             R = np.array(((c, -s), (s, c)))
@@ -167,4 +173,5 @@ class Zombie(object):
         if self.health <= 1:
             blood_mark = Blood(self.x, self.y)
             game_state.blood_marks.append(blood_mark)
-            game_state.score += 5
+            game_state.score += int(5 * game_state.multiplier)
+            game_state.multiplier += self.multiplier

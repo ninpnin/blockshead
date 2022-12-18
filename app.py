@@ -23,11 +23,18 @@ def end_game(window, game_config, game_state):
     # TODO: print text
     end_text = f'Game Over!\nFinal Score: {math.ceil(game_state.score)}, Final Level: {game_state.level -1}'
     
-def draw_stats(window, game_state):
+def draw_stats(window, game_state, game_config):
+    # Left corner title
     font = pygame.font.SysFont(None, 36)
     img = font.render(f'Level: {game_state.level}, Points: {game_state.score}', True, (100,100,100))
     window.blit(img, (20, 20))
-    
+
+    # Right corner title
+    font = pygame.font.SysFont(None, 36)
+    img = font.render(f'Multiplier: {game_state.multiplier:.2f}', True, (100,100,100))
+    window.blit(img, (game_config.width - 200, 20))
+
+    # Health bar
     health = game_state.blockshead.health
     pygame.draw.rect(window, (255,0,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, 100, 10))
     healthbar_width = int(100 * health/100)
@@ -93,10 +100,16 @@ def handle_keys(event, window, game_config, game_state):
             elif game_state.blockshead.x_vel != 0:
                 game_state.blockshead.direction = Direction.LEFT
                 
-def draw_screen(window, characters):
+def draw_screen(window, characters, debug=True):
     for c in characters:
         img = c.get_image()
-        window.blit(img, c.get_coordinates())
+        c_coords = c.get_coordinates()
+        x = c_coords[0] - img.get_width() // 2
+        y = c_coords[1] - img.get_height() // 2
+        window.blit(img, (x,y))
+
+        if debug:
+            pygame.draw.circle(window, (0,255,0), c_coords, c.radius, 3)
     
 def main_loop(game_config, game_state, window, clock, levelup=False):
     game_config, game_state, window = new_level(game_config, game_state, window)
@@ -137,13 +150,14 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.shots = [s for s in game_state.shots if s.lifetime >= 1]
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
             game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
-            
+            game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
+
             # Draw characters and objects
             # NOTE: Order matters here
             drawables = game_state.blood_marks + game_state.fakewalls + game_state.healthboxes
             drawables = drawables + [game_state.blockshead] + game_state.zombies
             draw_screen(window, drawables)
-            draw_stats(window, game_state)
+            draw_stats(window, game_state, game_config)
         else:
             draw_pause_screen(window, game_config)
         

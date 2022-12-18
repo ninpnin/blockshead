@@ -113,7 +113,7 @@ class Healthbox(object):
         return self.image
 
     def get_coordinates(self):
-        return self.x + 30, self.y + 30
+        return self.x, self.y
 
 
 class Fakewall(object):
@@ -127,4 +127,4 @@ class Fakewall(object):
         return self.image
 
     def get_coordinates(self):
-        return self.x + self.radius, self.y + self.radius
+        return self.x, self.y
