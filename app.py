@@ -1,185 +1,205 @@
-import tkinter as tk
-from tkinter import *
-import random
-import time
-import math
-from math import ceil
 from blockshead.gamestate import *
-from blockshead.characters import Blockshead, Zombie, Devil
+from blockshead.characters import Blockshead, Zombie
 from blockshead.objects import *
-import numpy as np
+import pygame
+import math
 
 def initialize_game():
-    window = WindowProperties(height=750, width=1000, x_buffer=40, y_buffer=40)
-    window.x_start = 2 * window.x_buffer - 20
-    window.y_start = 3 * window.y_buffer - 35
-    window.x_end = window.width - window.x_buffer - 20
-    window.y_end = window.height - window.y_buffer - 20
-
-    canvas = tk.Canvas(highlightthickness=0, height=window.height, width=window.width)
-    canvas.master.title("Blockshead")
-    canvas.pack()
-    
-    init_state = InitState()
-    game_config = GameConfig(canvas=canvas)
+    pygame.init()
+    pygame.display.set_caption('Blockshead')
+    game_config = GameConfig(canvas=None, width=1000, height=750)
+    screen = pygame.display.set_mode([game_config.width, game_config.height])
     game_state = GameState()
+    game_state.blockshead = Blockshead(game_config)
+    return game_config, game_state, screen
 
-    # Background
-    background = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
-    game_config.background = background
-
-    # Blockshead
-    game_state.blockshead = Blockshead(window, game_config)
-    game_state.stats = None
-
-    # Borders
-    canvas.create_rectangle(0,0,(window.x_buffer),(window.y_buffer+window.height), fill="Black") # create all of the buffer images
-    canvas.create_rectangle((window.x_buffer+window.width),0,(window.width-(window.x_buffer)),((2*window.y_buffer)+window.height), fill="Black")
-    canvas.create_rectangle(0,0,(window.width-window.x_buffer),window.y_buffer, fill="Black")
-    canvas.create_rectangle(0,(window.height-window.y_buffer),window.width,window.height, fill="Black")
-
-    # Start screen
-    init_state.startscreen = canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, belowThis=None)
-    init_state.starttext = canvas.create_text(window.width // 2, window.height // 2, text="Start game by pressing 'G'", fill="Black", font=game_config.font)
-
-    # Pause screen
-    game_config.pausescreen = canvas.create_rectangle(0, 0, window.width, window.height, fill="#EBDCC7", aboveThis=None)
-    game_config.pausetext = canvas.create_text(window.width // 2, window.height // 2, text="Paused", fill="Black", font=game_config.font)
-    canvas.itemconfigure(game_config.pausescreen, state='hidden')
-    canvas.itemconfigure(game_config.pausetext, state='hidden')
-
-    # Stats
-    game_config.stats = canvas.create_text(200,65)
-    canvas.create_rectangle(window.x_buffer,window.y_buffer,window.width - window.x_buffer,window.y_buffer+20,fill="Red")
-
-    return game_config, init_state, game_state, window
-
-def startgame(game_config, init_state, game_state, window):
-    print("startgame")
-    game_config.canvas.delete(init_state.startscreen)
-    game_config.canvas.delete(init_state.starttext)
-    game_config.canvas.after(30, lambda: main_loop(game_config, init_state, game_state, window))
-    game_config.canvas.bind("<KeyRelease>", lambda event: key_release(event, game_state))
-
-def pause_game(game_config, game_state):
-    if not game_state.paused:
-        game_config.canvas.tag_raise(game_config.pausescreen)
-        game_config.canvas.itemconfigure(game_config.pausescreen, state='normal')
-        game_config.canvas.tag_raise(game_config.pausetext)
-        game_config.canvas.itemconfigure(game_config.pausetext, state='normal')
-        game_state.paused = True
-    else:
-        game_config.canvas.itemconfigure(game_config.pausescreen, state='hidden')
-        game_config.canvas.itemconfigure(game_config.pausetext, state='hidden')
-        game_state.paused = False
+def draw_pause_screen(window, game_config):
+    window.fill(game_config.background_color)
+    font = pygame.font.SysFont(None, 36)
+    img = font.render("Paused. Press 'P' to continue", True, (100,100,100))
+    window.blit(img, (20, 20))
 
 def end_game(window, game_config, game_state):
-    background = game_config.canvas.create_rectangle(0, 0, window.width, window.height, fill=game_config.background_color, aboveThis=None)
-    end_text = 'Game Over!\nFinal Score: {}, Final Level: {}'.format(ceil(game_state.score), game_state.level -1)
-    game_config.canvas.create_text(window.width // 2, window.height // 2, text=end_text, fill="Black", font=game_config.font)
+    # TODO: print text
+    end_text = f'Game Over!\nFinal Score: {math.ceil(game_state.score)}, Final Level: {game_state.level -1}'
+    
+def draw_stats(window, game_state, game_config):
+    # Left corner title
+    font = pygame.font.SysFont(None, 36)
+    img = font.render(f'Level: {game_state.level}, Points: {game_state.score}', True, (100,100,100))
+    window.blit(img, (20, 20))
+    img = font.render(f'Weapon: {game_state.blockshead.weapon}', True, (100,100,100))
+    window.blit(img, (20, 60))
+    img = font.render(f'Ammo: {game_state.blockshead.ammo()}', True, (100,100,100))
+    window.blit(img, (20, 100))
 
-def update_stats(game_config, game_state):
-    # Refactor to change text content instead of creating a new object
-    health_string = str(game_state.blockshead.health)
-    score_string = str(ceil(game_state.score))
-    level_string = str(game_state.level)
-    gun_string = str(game_state.blockshead.gun)
-    ammo_string = str(game_state.blockshead.ammo)
-    score_board = "Health: " + health_string + "  " + "Score: " + score_string + "  " + "Level: " + level_string + "  " + "Gun: " + gun_string + "  " + "Ammo: " + ammo_string
-    game_config.canvas.delete(game_config.stats)
-    game_config.stats = game_config.canvas.create_text(230,52,text=score_board)
+    # Right corner title
+    font = pygame.font.SysFont(None, 36)
+    img = font.render(f'Multiplier: {game_state.multiplier:.2f}', True, (100,100,100))
+    window.blit(img, (game_config.width - 200, 20))
+
+    # Health bar
+    health = game_state.blockshead.health
+    pygame.draw.rect(window, (255,0,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, 100, 10))
+    healthbar_width = int(100 * health/game_config.max_health)
+    pygame.draw.rect(window, (0,128,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, healthbar_width, 10))
+
 
 def new_level(game_config, game_state, window):
-    """For every new level all of the Devils and Zombies have been killed so new ones need to be created. Each time 70% more Zombies are added"""
-    build_zombie = 0
-    build_devil = 0
-    for i in range(game_config.Number_of_Zombies + game_state.level // 2):
-        z = Zombie(window, game_config)
-        game_state.Zombie_Dict[build_zombie] = z
-        build_zombie += 1
-
-    for i in range(game_config.Number_of_Zombies // 5 + game_state.level // 3):
-        D = Devil(window, game_config)
-        game_state.Devil_Dict[build_devil] = D
-        build_devil +=1
-
-    for bm in list(game_state.blood_marks):
-        bm.levelup(game_config, game_state)
-
-    hb = Healthbox(window, game_config)
-    fw = Fakewall(window, game_config)
-
-    game_state.healthboxes.append(hb)
-    game_state.fakewalls.append(fw)
-    game_state.blockshead.health = min(100, 5 + game_state.blockshead.health) 
-    game_state.blockshead.mine_count += int(game_config.Number_of_Zombies / 5)
+    game_state.number_of_zombies += 1
+    game_state.zombies = []
+    while len(game_state.zombies) < game_state.number_of_zombies:
+        zombie = Zombie(window, game_config)
+        if not zombie._check_collisions(zombie.x, zombie.y, game_state, game_config):
+            game_state.zombies.append(zombie)
+    
+    healthbox = Healthbox(game_config, game_state)
+    game_state.healthboxes.append(healthbox)
+    
+    for blood_mark in game_state.blood_marks:
+        blood_mark.levelup()
+        
     game_state.level += 1
     
-    print("New level:", game_state.level)
-    return game_config, game_state
+    return game_config, game_state, window
 
-# TODO: incorporate the contents of blockshead.key and blockshead.keyup into the following functions
-def key_press(event, game_config, init_state, game_state, window):
-    pressed_character = event.keysym
-    if pressed_character == "g":
-        startgame(game_config, init_state, game_state, window)
-    elif pressed_character == "p":
-        print("Pause game")
-        pause_game(game_config, game_state)
-    else:
-        game_state.blockshead.key(pressed_character, window, game_config, game_state)
-
-def key_release(event, game_state):
-    released_character = event.keysym
-    game_state.blockshead.keyup(released_character)
-
-def main_loop(game_config, init_state, game_state, window, levelup=False):
-    if not init_state.game_started:
-        init_state.game_started = True
-
-    if game_state.blockshead.health <= 0:
-        end_game(window, game_config, game_state)
-    else:
+def handle_keys(event, window, game_config, game_state):
+    if event.type == pygame.KEYDOWN:
         if not game_state.paused:
-            if levelup:
-                new_level(game_config, game_state, window)
-            for zombie in game_state.Zombie_Dict.values():
-                zombie.move(game_state.blockshead, window, game_config, game_state)
-                zombie.update_sprite(game_config)
-                zombie.contact(game_state.blockshead)
-            for devil in game_state.Devil_Dict.values():
-                devil.move(game_state.blockshead, window, game_config, game_state)
-                devil.attack(game_state.blockshead, game_config, game_state)
-                devil.update_sprite(game_config)
-                devil.contact(game_state.blockshead)
+            # Game controls
+            if event.key == pygame.K_LEFT:
+                game_state.blockshead.x_vel = -1
+                game_state.blockshead.direction = Direction.LEFT
+            if event.key == pygame.K_RIGHT:
+                game_state.blockshead.x_vel = 1
+                game_state.blockshead.direction = Direction.RIGHT
+            if event.key == pygame.K_UP:
+                game_state.blockshead.y_vel = -1
+                game_state.blockshead.direction = Direction.UP
+            if event.key == pygame.K_DOWN:
+                game_state.blockshead.y_vel = 1
+                game_state.blockshead.direction = Direction.DOWN
+                
+            if event.key == pygame.K_SPACE:
+                shot = game_state.blockshead.fire_gun(window, game_config, game_state)
+                if shot is not None:
+                    game_state.shots.append(shot)
 
-            for attack_name, attack in list(game_state.Devil_Attack_Dict.items()):
-                attack.move(canvas, game_state.blockshead)
-                if attack.life_span <= 0:
-                    canvas.delete(attack.attack)
-                    del game_state.Devil_Attack_Dict[attack_name]
+            weapon_keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
+            weapon_keys += [pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
+            if event.key in weapon_keys:
+                index = weapon_keys.index(event.key)
+                if index < len(game_state.available_weapons):
+                    game_state.blockshead.weapon = game_state.available_weapons[index]
+                else:
+                    print(f"Weapon {index} not available")
+                #game_state.available_weapons
+        # Pause controls
+        if event.key == pygame.K_p:
+            game_state.paused = not game_state.paused
+            
+    elif event.type == pygame.KEYUP:
+        if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
+            game_state.blockshead.x_vel = 0
+            if game_state.blockshead.y_vel > 0:
+                game_state.blockshead.direction = Direction.DOWN
+            elif game_state.blockshead.y_vel != 0:
+                game_state.blockshead.direction = Direction.UP
 
-            for healthbox in list(game_state.healthboxes):
+        elif event.key in [pygame.K_UP, pygame.K_DOWN]:
+            game_state.blockshead.y_vel = 0
+            if game_state.blockshead.x_vel > 0:
+                game_state.blockshead.direction = Direction.RIGHT
+            elif game_state.blockshead.x_vel != 0:
+                game_state.blockshead.direction = Direction.LEFT
+                
+def draw_screen(window, characters, debug=True):
+    for c in characters:
+        img = c.get_image()
+        c_coords = c.get_coordinates()
+        x = c_coords[0] - img.get_width() // 2
+        y = c_coords[1] - img.get_height() // 2
+        window.blit(img, (x,y))
+
+        if debug:
+            pygame.draw.circle(window, (0,255,0), c_coords, c.radius, 3)
+
+def draw_shots(window, game_state):
+    for s in game_state.shots:
+        s.draw(window)
+
+def update_weapons(game_config, game_state):
+    new_weapons, new_ammo = [], dict()
+    for weapon, threshold in game_config.weapons.items():
+        if game_state.multiplier > threshold and weapon not in game_state.available_weapons:
+            print(f"New weapon: {weapon}")
+            new_weapons.append(weapon)
+            new_ammo[weapon] = game_config.ammo[weapon]
+    
+    return new_weapons, new_ammo
+    
+def main_loop(game_config, game_state, window, clock, levelup=False):
+    game_config, game_state, window = new_level(game_config, game_state, window)
+    
+    for _ in range(2):
+        wall = Fakewall(game_config)
+        game_state.fakewalls.append(wall)
+        
+    while True:
+        if len(game_state.zombies) == 0:
+            game_config, game_state, window = new_level(game_config, game_state, window)
+        dt = clock.tick(60)
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                handle_keys(event, window, game_config, game_state)
+
+        if not game_state.paused:
+            # Draw background
+            window.fill(game_config.background_color)
+            
+            # Move characters
+            game_state.blockshead.move(game_config, game_state)
+            for zombie in game_state.zombies:
+                zombie.move(window, game_config, game_state)
+                zombie.contact(game_state)
+
+            # Calculate interactions, attacks
+            for shot in game_state.shots:
+                shot.update(game_config, game_state)
+
+            for healthbox in game_state.healthboxes:
                 healthbox.update(game_config, game_state)
 
-            game_state.blockshead.move(window, game_config.canvas, game_state)
-            game_state.blockshead.update_shots(game_config, game_state)
-            game_state.blockshead.update_sprite(game_config)
-            update_stats(game_config, game_state)
+            game_state.zombies = [z for z in game_state.zombies if z.health >= 1]
+            game_state.shots = [s for s in game_state.shots if s.lifetime >= 0]
+            game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
+            game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
+            game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
+            new_weapons, new_ammo = update_weapons(game_config, game_state)
+            game_state.available_weapons += new_weapons
+            for weapon in new_weapons:
+                game_state.blockshead.ammo_dict[weapon] = new_ammo[weapon]
+            
+            # Draw characters and objects
+            # NOTE: Order matters here
+            drawables = game_state.blood_marks + game_state.fakewalls + game_state.healthboxes
+            drawables = drawables + [game_state.blockshead] + game_state.zombies
+            draw_screen(window, drawables)
+            draw_stats(window, game_state, game_config)
+            draw_shots(window, game_state)
         else:
-            pass
-
-        # Move to the next level if there are no enemies left
-        levelup = len(game_state.Zombie_Dict) == 0 and len(game_state.Devil_Dict) == 0
-
-        canvas.update()
-        canvas.after(5, lambda: main_loop(game_config, init_state, game_state, window, levelup))
+            draw_pause_screen(window, game_config)
+        
+        if game_state.blockshead.health <= 0:
+            return
+        
+        pygame.display.update()
+        
 
 if __name__ == "__main__":
-    game_config, init_state, game_state, window = initialize_game()
-    canvas = game_config.canvas
-    canvas.bind("<1>", lambda event: canvas.focus_set())
-    canvas.bind("<Key>", lambda event: key_press(event, game_config, init_state, game_state, window))
-
-    canvas.pack()
-    canvas.mainloop()
+    clock = pygame.time.Clock()
+    game_config, game_state, window = initialize_game()
+    main_loop(game_config, game_state, window, clock)

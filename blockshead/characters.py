@@ -1,358 +1,194 @@
-import tkinter as tk
-from tkinter import *
+import pygame
 import random
 import numpy as np
 from .objects import Direction
-from .objects import Pistol, Uzi, Fireball, DevilAttack, Blood
+from .objects import Pistol, Blood, Uzi, Shotgun
+import math
 
 class Blockshead(object):
-    """The Blockshead charecter. Shoot, move, lay mines etc. are all contianed within the Blockshead class. Eventually all of the gun details need to be moved to thier own class so that Pistol = Gun(range,damage) and Mine = Gun(radius, damage)
-    eventually even Shotgun = Gun(range,damange,arc_width) and so on"""
-    def __init__(self, window, game_config):
+    def __init__(self, game_config):
         self.images = {}
-        self.images[Direction.UP] = PhotoImage(file = "images/blockshead/bhup.png") # The image changes if Blockshead is facing up down left right
-        self.images[Direction.DOWN] = PhotoImage(file = "images/blockshead/bhdown.png")
-        self.images[Direction.LEFT] = PhotoImage(file = "images/blockshead/bhleft.png")
-        self.images[Direction.RIGHT] = PhotoImage(file = "images/blockshead/bhright.png")
-        self.x = random.randrange(((window.x_start/2)+15),window.x_end) # pick a random starting point on the right side of the field. Zombies start on the left half.
-        self.y = random.randrange(window.y_start,window.y_end)
+        self.images[Direction.UP] = pygame.image.load("images/blockshead/bhup.png")
+        self.images[Direction.DOWN] = pygame.image.load("images/blockshead/bhdown.png")
+        self.images[Direction.LEFT] = pygame.image.load("images/blockshead/bhleft.png")
+        self.images[Direction.RIGHT] = pygame.image.load("images/blockshead/bhright.png")
+        self.radius = 35
+        self.x = random.randrange(self.radius, game_config.width - self.radius)
+        self.y = random.randrange(self.radius, game_config.height - self.radius)
         self.direction = Direction.UP
-        self.image = game_config.canvas.create_image(self.x,self.y,image = self.images[self.direction])
-        self.healthbar_bg = game_config.canvas.create_rectangle(self.x + 20, self.y -55, self.x - 20, self.y - 60, fill="Red", belowThis=None)
-        self.healthbar = game_config.canvas.create_rectangle(self.x + 20, self.y -55, self.x - 20, self.y - 60, fill="Green", belowThis=None)
         self.x_vel = 0
         self.y_vel = 0
-        self.health = 100 # +5 health is added at the beginning of every level
-        self.gun = "Pistol"
-        self.ammo = "Infinite"
+        self.health = game_config.max_health # +5 health is added at the beginning of every level
+        self.weapon = "pistol"
+        self.ammo_dict = {"pistol": "Infinite"}
         self.pause = False
         self.bonus_score = 0
         self.pistol_range = 150 # the range of the pistol in pixels
         self.mine_count = 0 # how many mines are left
         self.bullet_images = []
         self.cooldown = 0
+        self.speed = 2.0
+    
+    def ammo(self):
+        return self.ammo_dict.get(self.weapon, 0)
+    
+    def get_image(self):            
+        return self.images[self.direction]
 
-    def move(self, window, canvas, game_state):
-        if (self.x >= window.x_end) and self.x_vel > 0:
+    def _check_collisions(self, x, y, game_state, radius=30):
+        for zombie in game_state.zombies + game_state.fakewalls:
+            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
+            if dist < zombie.radius + self.radius:
+                return True
+        return False
+
+    def move(self, game_config, game_state):
+        # game area boundaries
+        if (self.x >= game_config.width) and self.x_vel > 0:
             self.x_vel = 0
-        elif self.x <= window.x_start and self.x_vel < 0:
+        elif self.x <= 0 and self.x_vel < 0:
             self.x_vel = 0
 
-        if (self.y >= window.y_end) and self.y_vel > 0:
+        if (self.y >= game_config.height) and self.y_vel > 0:
             self.y_vel = 0
-        elif self.y <= window.y_start and self.y_vel < 0:
+        elif self.y <= 0 and self.y_vel < 0:
             self.y_vel = 0
 
-        next_x = self.x + self.x_vel * 2
-        next_y = self.y + self.y_vel * 2
+        speed = math.sqrt(self.x_vel ** 2 + self.y_vel ** 2)
+        if speed < 1.0:
+            speed = 1.0
+        speed = self.speed / speed
+        next_x = self.x + self.x_vel * speed
+        next_y = self.y + self.y_vel * speed
         radius = 5
-        max_x, min_x = max(next_x, self.x), max(next_x, self.x)
-        max_y, min_y = max(next_y, self.y), max(next_y, self.y)
+        # TODO: collitions
+        
+        if not self._check_collisions(next_x, next_y, game_state):
+            self.x = next_x
+            self.y = next_y
 
-        if max_x == min_x:
-            max_x += radius
-            min_x -= radius
-        if max_y == min_y:
-            max_y += radius
-            min_y -= radius
-
-        for zombie in game_state.Zombie_Dict.values():
-            if min_x <= zombie.x <= max_x and min_y <= zombie.y <= max_y:
-                self.x_vel, self.y_vel = 0, 0
-
-        for devil in game_state.Devil_Dict.values():
-            if min_x <= devil.x <= max_x and min_y <= devil.y <= max_y:
-                self.x_vel, self.y_vel = 0, 0
-
-        for fakewall in game_state.fakewalls:
-            if min_x <= fakewall.x <= max_x and min_y <= fakewall.y <= max_y:
-                self.x_vel, self.y_vel = 0, 0
-
-        self.x += self.x_vel
-        self.y += self.y_vel
         self.cooldown = max(0, self.cooldown - 1)
 
-    def update_sprite(self, game_config):
-        """Change Blockshead's image based on the direction he is moving"""
-        game_config.canvas.itemconfigure(self.image, image = self.images[self.direction])
-        game_config.canvas.coords(self.image,(self.x),(self.y))
-
-        # Health bar
-        width = int(40 * self.health / 100)
-        game_config.canvas.coords(self.healthbar,self.x -20 + width, self.y -55, self.x - 20, self.y - 60)
-        game_config.canvas.coords(self.healthbar_bg,self.x + 20, self.y -55, self.x - 20, self.y - 60)
-        game_config.canvas.tag_raise(self.healthbar_bg)
-        game_config.canvas.tag_raise(self.healthbar)
+    def get_coordinates(self):
+        return int(self.x), int(self.y)
 
     def fire_gun(self, window, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
         self.bonus_score = 0
         if self.cooldown == 0:
-            if self.gun == "Pistol":
+            if self.weapon == "pistol":
                 shot = Pistol(game_config, game_state)
-                self.cooldown = 20
-                game_state.shots.add(shot)
-            elif self.gun == "Uzi":
-                if game_state.blockshead.ammo > 0:
+                self.cooldown = 30
+                return shot
+            elif self.weapon == "uzi":
+                if self.ammo() > 0:
                     shot = Uzi(game_config, game_state)
-                    self.cooldown = 10
-                    game_state.shots.add(shot)
-            elif self.gun == "Fireball":
+                    self.cooldown = 12
+                    self.ammo_dict["uzi"] = max(0, self.ammo_dict.get("uzi", 0) - 1)
+                    return shot
+            elif self.weapon == "shotgun":
+                if self.ammo() > 0:
+                    shot = Shotgun(window, game_state)
+                    self.ammo_dict["shotgun"] = max(0, self.ammo_dict.get("shotgun", 0) - 1)
+                    self.cooldown = 45
+                    return shot
+            elif self.weapon == "fireball":
                 if game_state.blockshead.ammo > 0:
-                    shot = Fireball(window, game_config, game_state)
-                    self.cooldown = 30
-                    game_state.shots.add(shot)
-
-    def update_shots(self, game_config, game_state):
-        kill_list, kill_devil = [], []
-        for shot in list(game_state.shots):
-            killed_zombies, killed_devils = shot.update(game_config, game_state)
-            kill_list, kill_devil = kill_list + killed_zombies, kill_devil + killed_devils
-
-        # Kill the zombies that have run out of health
-        for zombie_ix in kill_list:
-            zombie = game_state.Zombie_Dict[zombie_ix]
-            if game_state.Zombie_Dict[zombie_ix].health <= 0:
-                game_config.canvas.delete(zombie)
-                del game_state.Zombie_Dict[zombie_ix]
-                mark = Blood(zombie.x, zombie.y,game_config)
-                game_state.blood_marks.add(mark)
-                game_state.score+=1
-                self.bonus_score +=1
-
-        # Kill the devils that have run out of health
-        for devil_ix in kill_devil:
-            devil = game_state.Devil_Dict[devil_ix]
-            if game_state.Devil_Dict[devil_ix].health <= 0:
-                game_config.canvas.delete(game_state.Devil_Dict[devil_ix])
-                mark = Blood(devil.x, devil.y,game_config)
-                game_state.blood_marks.add(mark)
-                del game_state.Devil_Dict[devil_ix]
-                game_state.score+=1
-                self.bonus_score +=1
-
-            game_state.score += (self.bonus_score / 3)
-
-        game_config.canvas.update()
-
-    def key(self, key, window, game_config, game_state):
-        B_move_length = game_config.B_move_length
-        if key == 'w':
-            self.x_vel = 0
-            self.y_vel = -B_move_length
-            self.direction = Direction.UP
-        elif key == 's':
-            self.x_vel = 0
-            self.y_vel = B_move_length
-            self.direction = Direction.DOWN
-        elif key == 'a':
-            self.x_vel = -B_move_length
-            self.y_vel = 0
-            self.direction = Direction.LEFT
-        elif key == 'd':
-            self.x_vel = B_move_length
-            self.y_vel = 0
-            self.direction = Direction.RIGHT
-        elif key == 'space':
-            self.fire_gun(window, game_config, game_state)
-        elif key == '1':
-            self.gun = "Pistol"
-            self.ammo = 'Infinite'
-        elif key == '2':
-            self.gun = "Uzi"
-            self.ammo = 50
-        elif key == '8':
-            self.gun = 'Fireball'
-            self.ammo = 10
-
-    def keyup(self, key):
-        if key in ['w', 's']:
-            self.y_vel = 0
-        elif key in ['a', 'd']:
-            self.x_vel = 0
-
-    def shoot_coords(self,x_start,y_start,x_end,y_end):
-        """Help to adjust the coordinates based on where to shoot from each direction"""
-        self.shoot_x_start = x_start
-        self.shoot_y_start = y_start
-        self.shoot_x_end = x_end
-        self.shoot_y_end = y_end
+                    #shot = Fireball(window, game_config, game_state)
+                    self.cooldown = 45
+                    return shot
 
 class Zombie(object):
-    """ZOMBIES. Nothing like a bunch of Zombies that chase you around. Blockshead is faster then Zombies, but Zombies can move diagonally"""
     def __init__(self, window, game_config):
         self.direction = Direction.UP
         self.images = {}
         for direction in Direction:
-            self.images[direction] = PhotoImage(file = "images/zombies/z{}.png".format(direction.name.lower())) # the 8 Devil images
+            # 8 different devil images
+            self.images[direction] = pygame.image.load(f"images/zombies/z{direction.name.lower()}.png")
 
-        self.x = random.randrange(window.x_start, window.x_end // 3) # create Zombies in the left half of the arena
-        self.y = random.randrange(window.y_start,window.y_end)
-        
-        self.zombie = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
+        # pick a random starting point on the right side of the field. Zombies start on the left half.
+        self.radius = 35
+        self.x = random.randrange(self.radius, game_config.width // 4)
+        self.y = random.randrange(self.radius, game_config.height - self.radius)
+
+        self.speed = 0.5
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0
+        self.multiplier = 0.5
+        self.angles = [0, 30, -30, 60, -60, 90, -90, 110, -110, 130, -130]
 
-    def move(self, target, window, game_config, game_state):
-        """
-        This function like Blockshead1.move tests to see whether the Zombie will hit the edge of the game,
-        but also tests to see whether the Zombie will collide with another Zombie in front of it. This helps
-        avoid having all of the Zombies stack up on top of each other and froming one really dense Zombie.
-        That is what the really long line of code below is testing
-        """
+        # Randomize movement on enemy level
+        if random.choice([True, False, False]):
+            self.angles = [20] + self.angles
+        elif random.choice([True, False]):
+            self.angles = [-20] + self.angles
+    
+    def _check_collisions(self, x, y, game_state, game_config):
+        if x >= game_config.width or x < 0:
+            return True
+        if y >= game_config.height or y < 0:
+            return True
+
+        for zombie in game_state.zombies + game_state.fakewalls + [game_state.blockshead]:
+            if zombie is self:
+                continue
+            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
+            if dist < zombie.radius + self.radius:
+                return True
+        return False
+
+    def move(self, window, game_config, game_state):
+        target = game_state.blockshead
         if self.cooldown > 0:
             self.cooldown -= 1
         if self.injury_cooldown > 0:
             self.injury_cooldown -= 1
             return
 
+        diff = np.array([self.x - target.x, self.y - target.y])
+        diff = diff / np.linalg.norm(diff) * self.speed
+        
+        for angle in self.angles:
+            theta = np.radians(angle)
+            c, s = np.cos(theta), np.sin(theta)
+            R = np.array(((c, -s), (s, c)))
+            direction = R @ diff
+            next_x = self.x - direction[0]
+            next_y = self.y - direction[1]
 
-        self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
-        self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
-        self.radius = 25
+            collisions = self._check_collisions(next_x, next_y, game_state, game_config)
+            if not collisions:
+                self.x = next_x
+                self.y = next_y
 
-        next_x = self.x + self.x_vel
-        next_y = self.y + self.y_vel
-
-        potential_collisions = list(game_state.Zombie_Dict.values())
-        potential_collisions += list(game_state.Devil_Dict.values()) + [target]
-        potential_collisions += game_state.fakewalls
-
-        for entity in potential_collisions:
-            if entity != self:
-                if abs(next_x - entity.x) < self.radius and abs(next_y - entity.y) < self.radius:
-                    if abs(self.x - entity.x) >= self.radius:
-                        self.x_vel = 0
-                    elif abs(self.y - entity.y) >= self.radius:
-                        self.y_vel = 0
-                    else:
-                        self.x_vel, self.y_vel = 0, 0
-
-        self.y += self.y_vel
-        self.x += self.x_vel
-             # move the Zombie accordingly based on if it should move or another Zombie is in its path
+                break
+                    
+        # Cooldown period for shooting
         if self.cooldown > 0:
             self.cooldown -= 1
         if self.injury_cooldown > 0:
             self.injury_cooldown -= 1
 
-    # TODO: rename to draw
-    def update_sprite(self, game_config):
-        """Update the Zombie image based on which of the 8 directions that it is traveling in"""
-        direction = ""
-        if self.x_vel < 0:
-            direction += "left"
-        elif self.x_vel > 0:
-            direction += "right"
-        if self.y_vel < 0:
-            direction += "up"
-        elif self.y_vel > 0:
-            direction += "down"
+    def get_coordinates(self):
+        return int(self.x), int(self.y)
 
-        # Load new sprite if direction has changed
-        if direction != "" and direction != self.direction.name.lower():
-            self.direction = Direction[direction.upper()]
-            game_config.canvas.itemconfigure(self.zombie, image = self.images.get(direction, self.images[self.direction]))
+    def get_image(self):            
+        return self.images[self.direction]
 
-        game_config.canvas.coords(self.zombie,(self.x),(self.y))
-
-    def contact(self, target):
-        """This is how the Zombies do damage to Blockshead. If they com in contact with Blockshead it deducts health from blockshead"""
-        if abs(target.x - self.x) < self.radius + 2 and abs(target.y - self.y) < self.radius + 2 and self.cooldown == 0:
+    def contact(self, game_state):
+        target = game_state.blockshead
+        horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
+        vertical = abs(target.y - self.y) < target.radius + self.radius + 2
+        if horizontal and vertical and self.cooldown == 0:
             target.health -= 1
-            self.cooldown = 5
-
-    def injure(self, damage):
+            self.cooldown = 10
+    
+    def injure(self, damage, game_state):
         self.health -= damage
-        self.injury_cooldown = 5
-
-class Devil(object):
-    """The Devil Class. They move faster than Zombies have more health and can attack Blockshead by colliding with him or by shooting him"""
-    def __init__(self, window, game_config):
-        # create Devils in the left half of the arena
-        self.x = random.randrange(window.x_start, window.x_end // 3)
-        self.y = random.randrange(window.y_start,window.y_end)
-        self.direction = Direction.UP
-        self.cooldown = 0
-        self.injury_cooldown = 0
-        self.attack_fire = 0
-        self.health = 100
-        self.images = {}
-        for direction in Direction:
-            self.images[direction] = PhotoImage(file = "images/devils/d{}.png".format(direction.name.lower()))
-
-        self.devil = game_config.canvas.create_image(self.x,self.y, image = self.images[self.direction])
-
-    def move(self, target, window, game_config, game_state):
-        if self.cooldown > 0:
-            self.cooldown -= 1
-        if self.injury_cooldown > 0:
-            self.injury_cooldown -= 1
-            return
-
-        """The Devil's movement is the same as the Zombies except that Devils move faster"""
-        self.x_vel = - game_config.Zombie_per_move * np.sign(self.x - target.x)
-        self.y_vel = - game_config.Zombie_per_move * np.sign(self.y - target.y)
-        self.radius = 25
-
-        next_x = self.x + self.x_vel
-        next_y = self.y + self.y_vel
-
-        potential_collisions = list(game_state.Zombie_Dict.values())
-        potential_collisions += list(game_state.Devil_Dict.values()) + [target]
-
-        for entity in potential_collisions:
-            if entity != self:
-                if abs(next_x - entity.x) < self.radius and abs(next_y - entity.y) < self.radius:
-                    if abs(self.x - entity.x) >= self.radius:
-                        self.x_vel = 0
-                    elif abs(self.y - entity.y) >= self.radius:
-                        self.y_vel = 0
-                    else:
-                        self.x_vel, self.y_vel = 0, 0
-        
-        self.y += self.y_vel
-        self.x += self.x_vel
-
-    def update_sprite(self, game_config):
-        """Update the Zombie image based on which of the 8 directions that it is traveling in"""
-        direction = ""
-        if self.x_vel < 0:
-            direction += "left"
-        elif self.x_vel > 0:
-            direction += "right"
-        if self.y_vel < 0:
-            direction += "up"
-        elif self.y_vel > 0:
-            direction += "down"
-
-        if direction != "" and direction != self.direction.name.lower():
-            self.direction = Direction[direction.upper()]
-            game_config.canvas.itemconfigure(self.devil, image = self.images[self.direction])
-        
-        game_config.canvas.coords(self.devil,(self.x),(self.y))
-
-    def contact(self, target):
-        """If a Devil comes in contact with blockshead it deducts more health than a Zombie would"""
-        if abs(target.x - self.x) < self.radius + 2 and abs(target.y - self.y) < self.radius + 2 and self.cooldown == 0:
-            target.health -= 2
-            self.cooldown = 5
-
-    def attack(self, target, game_config, game_state):
-        # Only attack if hasn't been recently shot at
-        if self.injury_cooldown > 0:
-            return
-
-        """If the Devil is within +/- 200 pixels in the X and Y directions then it shoots a fireball at blockshead 1 time and then waits 45 loops to shoot agian"""
-        if abs(target.x - self.x) < 200 and abs(target.y - self.y) < 200 and self.attack_fire > 45:
-            d_attack = DevilAttack(self.x,self.y,self.x_vel,self.y_vel, game_config.canvas)
-            total_devil_attacks = len(game_state.Devil_Attack_Dict)
-            game_state.Devil_Attack_Dict[total_devil_attacks] = d_attack
-            self.attack_fire = 0
-        else:
-            self.attack_fire += 1
-
-    def injure(self, damage):
-        self.health -= damage
-        self.injury_cooldown = 5
+        self.injury_cooldown = 11
+        if self.health <= 1:
+            blood_mark = Blood(self.x, self.y)
+            game_state.blood_marks.append(blood_mark)
+            game_state.score += int(5 * game_state.multiplier)
+            game_state.multiplier += self.multiplier

@@ -1,6 +1,6 @@
 # blockshead
 
-Simple 2D shooter game written in Python. To be ported to use pygame or similar
+Simple 2D shooter game written in Python. To be ported to use pygame or similar in the future.
 
 # Roadmap
 
@@ -14,9 +14,10 @@ Simple 2D shooter game written in Python. To be ported to use pygame or similar
   - [x] Health boxes
 - [ ] Weapons
   - [x] Pistol
+  - [x] UZI
   - [ ] Shotgun
   - [x] Walls
-  - [x] Mines
+  - [ ] Mines
   - [ ] Custom weapons
 - [ ] Maps
   - [ ] Original map or two
@@ -30,14 +31,9 @@ Simple 2D shooter game written in Python. To be ported to use pygame or similar
   - [ ] Sketch versions of original opponents
   - [ ] Finalized versions of original opponents
   - [ ] Comic versions of weapons
-- [ ] Refactoring overhaul of the codebase
+- [x] Refactoring overhaul of the codebase
   - [x] Minimize the use of global
   - [x] Remove while loops
-  - [ ] Use NumPy for coordinates
-  - [ ] Fix minor issues and inconsistancies 
+  - [x] Use NumPy for coordinates
+  - [x] Fix minor issues and inconsistancies 
 
-# Bugs and issues
-
-- Zombies can be one-hit-KOd
-- Pause menu hides blood spots
-- Start text / instructions are not visible
