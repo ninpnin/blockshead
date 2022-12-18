@@ -103,9 +103,9 @@ class Uzi:
         self.range = 250
         self.damage = 11
         self.radius = 30
-        self.shoot_x_start = x_vel * 10 + blockshead.x
+        self.shoot_x_start = x_vel * 5 + blockshead.x
         self.shoot_x_end = x_vel * self.range + blockshead.x + 1
-        self.shoot_y_start = y_vel * 10 + blockshead.y
+        self.shoot_y_start = y_vel * 5 + blockshead.y
         self.shoot_y_end = y_vel * self.range + blockshead.y + 1
         self.lifetime = 3
 
@@ -154,13 +154,19 @@ class Uzi:
 
 class Healthbox(object):
     """Static object for drawing blood on the ground"""
-    def __init__(self, game_config):
+    def __init__(self, game_config, game_state):
         self.x = random.randrange(0, game_config.width) # create Zombies in the left half of the arena
         self.y = random.randrange(0, game_config.height)
         self.image = pygame.image.load("images/game_elements/healthbox.png")
         self.radius = 25
-        self.type = random.choice(["health", "ammo"])
-        self.health = 25
+        types = ["health"]
+        available_weapons = [w for w in game_state.available_weapons if w != "pistol"]
+        if len(available_weapons) > 1:
+            types += ["ammo"]
+        self.type = random.choice(types)
+        if self.type == "ammo":
+            self.type = random.choice(available_weapons)
+        self.health = 50
         self.active = True
 
     def update(self, game_config, game_state):
@@ -168,10 +174,14 @@ class Healthbox(object):
         diff_y = abs(game_state.blockshead.y - self.y)
         if diff_x < self.radius and diff_y < self.radius:
             if self.type == "health":
-                game_state.blockshead.health = min(100, game_state.blockshead.health + self.health)
-            elif self.type == "ammo":
-                if type(game_state.blockshead.ammo) == int:
-                    game_state.blockshead.ammo += 10
+                game_state.blockshead.health = game_state.blockshead.health + self.health
+                game_state.blockshead.health = min(game_config.max_health, game_state.blockshead.health)
+            else:
+                print(f"Picked up {self.type}")
+                # Increment ammo of self.type 2/3 of max ammo, cap at max ammo
+                max_ammo = game_config.ammo[self.type]
+                game_state.blockshead.ammo_dict[self.type] += 2 * max_ammo / 3
+                game_state.blockshead.ammo_dict[self.type] = min(max_ammo, game_state.blockshead.ammo_dict[self.type])
             self.active = False
 
     def get_image(self):

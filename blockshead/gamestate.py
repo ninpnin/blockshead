@@ -8,6 +8,7 @@ class GameConfig:
     weapons = {"pistol": 1, "uzi": 1, "shotgun": 5}
     ammo = {"uzi": 50, "shotgun": 15}
     multiplier_step = 0.0002
+    max_health = 200
     height: int
     width: int
 

@@ -18,7 +18,7 @@ class Blockshead(object):
         self.direction = Direction.UP
         self.x_vel = 0
         self.y_vel = 0
-        self.health = 100 # +5 health is added at the beginning of every level
+        self.health = game_config.max_health # +5 health is added at the beginning of every level
         self.weapon = "pistol"
         self.ammo_dict = {"pistol": "Infinite"}
         self.pause = False
@@ -110,7 +110,7 @@ class Zombie(object):
         self.cooldown = 0
         self.injury_cooldown = 0
         self.multiplier = 0.5
-        self.angles = [0, 30, -30, 60, -60, 90, -90, 110, -110]
+        self.angles = [0, 30, -30, 60, -60, 90, -90, 110, -110, 130, -130]
 
         # Randomize movement on enemy level
         if random.choice([True, False, False]):

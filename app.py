@@ -41,7 +41,7 @@ def draw_stats(window, game_state, game_config):
     # Health bar
     health = game_state.blockshead.health
     pygame.draw.rect(window, (255,0,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, 100, 10))
-    healthbar_width = int(100 * health/100)
+    healthbar_width = int(100 * health/game_config.max_health)
     pygame.draw.rect(window, (0,128,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, healthbar_width, 10))
 
 
@@ -53,7 +53,7 @@ def new_level(game_config, game_state, window):
         if not zombie._check_collisions(zombie.x, zombie.y, game_state, game_config):
             game_state.zombies.append(zombie)
     
-    healthbox = Healthbox(game_config)
+    healthbox = Healthbox(game_config, game_state)
     game_state.healthboxes.append(healthbox)
     
     for blood_mark in game_state.blood_marks:
