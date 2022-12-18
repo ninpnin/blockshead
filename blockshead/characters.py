@@ -2,7 +2,7 @@ import pygame
 import random
 import numpy as np
 from .objects import Direction
-from .objects import Pistol, Blood
+from .objects import Pistol, Blood, Uzi
 import math
 
 class Blockshead(object):
@@ -19,8 +19,8 @@ class Blockshead(object):
         self.x_vel = 0
         self.y_vel = 0
         self.health = 100 # +5 health is added at the beginning of every level
-        self.gun = "pistol"
-        self.ammo = "Infinite"
+        self.weapon = "pistol"
+        self.ammo_dict = {"pistol": "Infinite"}
         self.pause = False
         self.bonus_score = 0
         self.pistol_range = 150 # the range of the pistol in pixels
@@ -28,6 +28,9 @@ class Blockshead(object):
         self.bullet_images = []
         self.cooldown = 0
         self.speed = 2.0
+    
+    def ammo(self):
+        return self.ammo_dict.get(self.weapon, 0)
     
     def get_image(self):            
         return self.images[self.direction]
@@ -73,16 +76,16 @@ class Blockshead(object):
         """Fires whichever weapon that blockshead is using at the moment"""
         self.bonus_score = 0
         if self.cooldown == 0:
-            if self.gun == "pistol":
+            if self.weapon == "pistol":
                 shot = Pistol(game_config, game_state)
                 self.cooldown = 30
                 return shot
-            elif self.gun == "uzi":
-                if game_state.blockshead.ammo > 0:
-                    #shot = Uzi(game_config, game_state)
+            elif self.weapon == "uzi":
+                if self.ammo() > 0:
+                    shot = Uzi(game_config, game_state)
                     self.cooldown = 12
                     return shot
-            elif self.gun == "fireball":
+            elif self.weapon == "fireball":
                 if game_state.blockshead.ammo > 0:
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 45
@@ -105,7 +108,7 @@ class Zombie(object):
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0
-        self.multiplier = 0.1
+        self.multiplier = 0.5
         self.angles = [0, 30, -30, 60, -60, 90, -90, 110, -110]
 
         # Randomize movement on enemy level

@@ -28,6 +28,8 @@ def draw_stats(window, game_state, game_config):
     font = pygame.font.SysFont(None, 36)
     img = font.render(f'Level: {game_state.level}, Points: {game_state.score}', True, (100,100,100))
     window.blit(img, (20, 20))
+    img = font.render(f'Weapon: {game_state.blockshead.weapon}', True, (100,100,100))
+    window.blit(img, (20, 60))
 
     # Right corner title
     font = pygame.font.SysFont(None, 36)
@@ -81,6 +83,15 @@ def handle_keys(event, window, game_config, game_state):
                 if shot is not None:
                     game_state.shots.append(shot)
 
+            weapon_keys = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5]
+            weapon_keys += [pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
+            if event.key in weapon_keys:
+                index = weapon_keys.index(event.key)
+                if index < len(game_state.available_weapons):
+                    game_state.blockshead.weapon = game_state.available_weapons[index]
+                else:
+                    print(f"Weapon {index} not available")
+                #game_state.available_weapons
         # Pause controls
         if event.key == pygame.K_p:
             game_state.paused = not game_state.paused
@@ -115,6 +126,15 @@ def draw_shots(window, game_state):
     for s in game_state.shots:
         s.draw(window)
 
+def update_weapons(game_config, game_state):
+    new_weapons = []
+    for weapon, threshold in game_config.weapons.items():
+        if threshold and weapon not in game_state.available_weapons:
+            print(f"New weapon: {weapon}")
+            new_weapons.append(weapon)
+    
+    return new_weapons
+    
 def main_loop(game_config, game_state, window, clock, levelup=False):
     game_config, game_state, window = new_level(game_config, game_state, window)
     
@@ -155,7 +175,8 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
             game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
             game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
-
+            game_state.available_weapons += update_weapons(game_config, game_state)
+            
             # Draw characters and objects
             # NOTE: Order matters here
             drawables = game_state.blood_marks + game_state.fakewalls + game_state.healthboxes
