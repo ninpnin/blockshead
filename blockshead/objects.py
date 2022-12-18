@@ -180,7 +180,7 @@ class Healthbox(object):
                 print(f"Picked up {self.type}")
                 # Increment ammo of self.type 2/3 of max ammo, cap at max ammo
                 max_ammo = game_config.ammo[self.type]
-                game_state.blockshead.ammo_dict[self.type] += 2 * max_ammo / 3
+                game_state.blockshead.ammo_dict[self.type] += 2 * max_ammo // 3
                 game_state.blockshead.ammo_dict[self.type] = min(max_ammo, game_state.blockshead.ammo_dict[self.type])
             self.active = False
 
