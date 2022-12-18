@@ -2,7 +2,7 @@ import pygame
 import random
 import numpy as np
 from .objects import Direction
-from .objects import Pistol, Blood, Uzi
+from .objects import Pistol, Blood, Uzi, Shotgun
 import math
 
 class Blockshead(object):
@@ -85,6 +85,12 @@ class Blockshead(object):
                     shot = Uzi(game_config, game_state)
                     self.cooldown = 12
                     self.ammo_dict["uzi"] = max(0, self.ammo_dict.get("uzi", 0) - 1)
+                    return shot
+            elif self.weapon == "shotgun":
+                if self.ammo() > 0:
+                    shot = Shotgun(window, game_state)
+                    self.ammo_dict["shotgun"] = max(0, self.ammo_dict.get("shotgun", 0) - 1)
+                    self.cooldown = 45
                     return shot
             elif self.weapon == "fireball":
                 if game_state.blockshead.ammo > 0:

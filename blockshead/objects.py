@@ -151,6 +151,69 @@ class Uzi:
 
         pygame.draw.rect(window, (0,0,0), (x, y, width, height))
 
+class Shotgun:
+    def __init__(self, game_config, game_state):
+        blockshead = game_state.blockshead
+        self.direction = blockshead.direction
+        x_vel, y_vel = self.direction.value
+        self.direction = np.array(self.direction.value) / np.linalg.norm(self.direction.value)
+        self.range = 200
+        self.angle = 19
+        self.damage = 20
+        self.radius = 30
+        self.shoot_x_start = x_vel * 5 + blockshead.x
+        self.shoot_x_end = x_vel * self.range + blockshead.x + 1
+        self.shoot_y_start = y_vel * 5 + blockshead.y
+        self.shoot_y_end = y_vel * self.range + blockshead.y + 1
+        self.lifetime = 3
+
+        self.attacked = False
+        mixer.music.load('audio/shotgun.wav')
+        mixer.music.play()
+
+    def contact(self, game_state):
+        killed_zombies, killed_devils = [], []
+
+        # Does damage if distance <= max distance and angle < max angle
+        injured = 0
+        for zombie in game_state.zombies:
+            diff = np.array([zombie.x - self.shoot_x_start, zombie.y - self.shoot_y_start])
+            distance = np.linalg.norm(diff)
+            cosine = np.dot(diff / np.linalg.norm(diff), self.direction)
+            min_cos = np.cos(np.radians(self.angle))
+            if distance <= self.range and cosine >= min_cos:
+                zombie.injure(self.damage, game_state)
+                injured += 1
+                
+        if injured >= 1:
+            print("injured", injured)
+
+        return killed_zombies, killed_devils
+
+    def update(self, game_config, game_state):
+        self.lifetime -= 1
+
+        # Update image width
+        #self.shoot_x_start = (self.shoot_x_start + self.shoot_x_end) // 2
+        #self.shoot_y_start = (self.shoot_y_start + self.shoot_y_end) // 2
+
+        if not self.attacked:
+            self.attacked = True
+            return self.contact(game_state)
+
+        return [], []
+
+    def draw(self, window):
+        for angle in [0, self.angle, -self.angle]:
+            theta = np.radians(angle + random.uniform(-10, 10))
+            c, s = np.cos(theta), np.sin(theta)
+            R = np.array(((c, -s), (s, c)))
+
+            x = np.array([self.shoot_x_end - self.shoot_x_start, self.shoot_y_end - self.shoot_y_start])
+            x_prime = R @ x
+            x_end, y_end = int(x_prime[0]) + self.shoot_x_start, int(x_prime[1]) + self.shoot_y_start
+            pygame.draw.line(window, (0,0,0), (self.shoot_x_start, self.shoot_y_start), (x_end, y_end))
+
 
 class Healthbox(object):
     """Static object for drawing blood on the ground"""

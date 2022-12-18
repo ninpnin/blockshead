@@ -5,7 +5,7 @@ class GameConfig:
     canvas: bool
     background_color = "#EBDCC7"
     font = ('Helvetica','30','bold')
-    weapons = {"pistol": 1, "uzi": 1, "shotgun": 5}
+    weapons = {"pistol": 1, "uzi": 1, "shotgun": 1}
     ammo = {"uzi": 50, "shotgun": 15}
     multiplier_step = 0.0002
     max_health = 200
