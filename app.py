@@ -110,7 +110,11 @@ def draw_screen(window, characters, debug=True):
 
         if debug:
             pygame.draw.circle(window, (0,255,0), c_coords, c.radius, 3)
-    
+
+def draw_shots(window, game_state):
+    for s in game_state.shots:
+        s.draw(window)
+
 def main_loop(game_config, game_state, window, clock, levelup=False):
     game_config, game_state, window = new_level(game_config, game_state, window)
     
@@ -147,7 +151,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
                 healthbox.update(game_config, game_state)
 
             game_state.zombies = [z for z in game_state.zombies if z.health >= 1]
-            game_state.shots = [s for s in game_state.shots if s.lifetime >= 1]
+            game_state.shots = [s for s in game_state.shots if s.lifetime >= 0]
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
             game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
             game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
@@ -158,6 +162,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             drawables = drawables + [game_state.blockshead] + game_state.zombies
             draw_screen(window, drawables)
             draw_stats(window, game_state, game_config)
+            draw_shots(window, game_state)
         else:
             draw_pause_screen(window, game_config)
         

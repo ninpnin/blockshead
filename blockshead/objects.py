@@ -45,9 +45,9 @@ class Pistol:
         self.range = 100
         self.damage = 11
         self.radius = 30
-        self.shoot_x_start = x_vel * 10 + blockshead.x
+        self.shoot_x_start = x_vel * 5 + blockshead.x
         self.shoot_x_end = x_vel * self.range + blockshead.x + 1
-        self.shoot_y_start = y_vel * 10 + blockshead.y
+        self.shoot_y_start = y_vel * 5 + blockshead.y
         self.shoot_y_end = y_vel * self.range + blockshead.y + 1
         self.lifetime = 3
         self.attacked = False
@@ -68,7 +68,6 @@ class Pistol:
             cond_y = min_y - self.radius <= zombie.y <= max_y + self.radius
             if cond_x and cond_y:
                 zombie.injure(self.damage, game_state)
-                killed_zombies.append(zombie)
 
         return killed_zombies, killed_devils
 
@@ -80,12 +79,21 @@ class Pistol:
         self.shoot_y_start = (self.shoot_y_start + self.shoot_y_end) // 2
         
         # TODO: draw shot
-        
+
         if not self.attacked:
             self.attacked = True
             return self.contact(game_state)
 
         return [], []
+
+    def draw(self, window):
+        x = min(self.shoot_x_start, self.shoot_x_end)
+        width = max(self.shoot_x_start, self.shoot_x_end) - x + 1
+
+        y = min(self.shoot_y_start, self.shoot_y_end)
+        height = max(self.shoot_y_start, self.shoot_y_end) - y + 1
+
+        pygame.draw.rect(window, (0,0,0), (x, y, width, height))
 
 
 class Healthbox(object):
