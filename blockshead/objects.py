@@ -22,6 +22,7 @@ class Blood(object):
         self.level_lifetime = 2
         self.x = x
         self.y = y
+        self.radius = 30
 
     def get_coordinates(self):
         return int(self.x), int(self.y)
@@ -121,7 +122,7 @@ class Fakewall(object):
         self.x = random.randrange(0, game_config.width)
         self.y = random.randrange(0, game_config.height)
         self.image = pygame.image.load("images/game_elements/fakewall80.png")
-        self.radius = 60
+        self.radius = 35
         
     def get_image(self):
         return self.image

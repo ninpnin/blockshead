@@ -35,7 +35,7 @@ class Blockshead(object):
     def _check_collisions(self, x, y, game_state, radius=30):
         for zombie in game_state.zombies + game_state.fakewalls:
             dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
-            if dist < zombie.radius:
+            if dist < zombie.radius + self.radius:
                 return True
         return False
 
@@ -119,7 +119,7 @@ class Zombie(object):
             if zombie is self:
                 continue
             dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
-            if dist < zombie.radius:
+            if dist < zombie.radius + self.radius:
                 return True
         return False
 
@@ -163,7 +163,9 @@ class Zombie(object):
 
     def contact(self, game_state):
         target = game_state.blockshead
-        if abs(target.x - self.x) < self.radius + 2 and abs(target.y - self.y) < self.radius + 2 and self.cooldown == 0:
+        horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
+        vertical = abs(target.y - self.y) < target.radius + self.radius + 2
+        if horizontal and vertical and self.cooldown == 0:
             target.health -= 1
             self.cooldown = 10
     
