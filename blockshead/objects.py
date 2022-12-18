@@ -175,7 +175,6 @@ class Shotgun:
         killed_zombies, killed_devils = [], []
 
         # Does damage if distance <= max distance and angle < max angle
-        injured = 0
         for zombie in game_state.zombies:
             diff = np.array([zombie.x - self.shoot_x_start, zombie.y - self.shoot_y_start])
             distance = np.linalg.norm(diff)
@@ -183,10 +182,6 @@ class Shotgun:
             min_cos = np.cos(np.radians(self.angle))
             if distance <= self.range and cosine >= min_cos:
                 zombie.injure(self.damage, game_state)
-                injured += 1
-                
-        if injured >= 1:
-            print("injured", injured)
 
         return killed_zombies, killed_devils
 
