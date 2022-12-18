@@ -6,7 +6,7 @@ class GameConfig:
     background_color = "#EBDCC7"
     font = ('Helvetica','30','bold')
     weapons = {"pistol": 1, "uzi": 3, "shotgun": 5}
-    multiplier_step = 0.00025
+    multiplier_step = 0.0002
     height: int
     width: int
 

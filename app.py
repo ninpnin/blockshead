@@ -46,7 +46,7 @@ def new_level(game_config, game_state, window):
     game_state.zombies = []
     while len(game_state.zombies) < game_state.number_of_zombies:
         zombie = Zombie(window, game_config)
-        if not zombie._check_collisions(zombie.x, zombie.y, game_state):
+        if not zombie._check_collisions(zombie.x, zombie.y, game_state, game_config):
             game_state.zombies.append(zombie)
     
     healthbox = Healthbox(game_config)

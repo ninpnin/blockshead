@@ -97,16 +97,16 @@ class Zombie(object):
             self.images[direction] = pygame.image.load(f"images/zombies/z{direction.name.lower()}.png")
 
         # pick a random starting point on the right side of the field. Zombies start on the left half.
-        self.x = random.randrange(0,game_config.width // 3)
-        self.y = random.randrange(0,game_config.height)
+        self.radius = 35
+        self.x = random.randrange(self.radius, game_config.width // 4)
+        self.y = random.randrange(self.radius, game_config.height - self.radius)
 
         self.speed = 0.5
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0
-        self.radius = 35
         self.multiplier = 0.1
-        self.angles = [0, 30, -30, 60, -60, 90, -90]
+        self.angles = [0, 30, -30, 60, -60, 90, -90, 110, -110]
 
         # Randomize movement on enemy level
         if random.choice([True, False, False]):
@@ -114,7 +114,12 @@ class Zombie(object):
         elif random.choice([True, False]):
             self.angles = [-20] + self.angles
     
-    def _check_collisions(self, x, y, game_state, radius=30):
+    def _check_collisions(self, x, y, game_state, game_config):
+        if x >= game_config.width or x < 0:
+            return True
+        if y >= game_config.height or y < 0:
+            return True
+
         for zombie in game_state.zombies + game_state.fakewalls + [game_state.blockshead]:
             if zombie is self:
                 continue
@@ -142,13 +147,13 @@ class Zombie(object):
             next_x = self.x - direction[0]
             next_y = self.y - direction[1]
 
-            collisions = self._check_collisions(next_x, next_y, game_state)
+            collisions = self._check_collisions(next_x, next_y, game_state, game_config)
             if not collisions:
+                self.x = next_x
+                self.y = next_y
+
                 break
-            
-        self.x = next_x
-        self.y = next_y
-        
+                    
         # Cooldown period for shooting
         if self.cooldown > 0:
             self.cooldown -= 1
