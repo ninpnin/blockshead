@@ -27,7 +27,7 @@ class Blockshead(object):
         self.mine_count = 0 # how many mines are left
         self.bullet_images = []
         self.cooldown = 0
-        self.speed = 2.0
+        self.speed = game_config.blockshead_speed
     
     def ammo(self):
         return self.ammo_dict.get(self.weapon, 0)
@@ -114,7 +114,7 @@ class Zombie(object):
         self.x = random.randrange(self.radius, game_config.width // 4)
         self.y = random.randrange(self.radius, game_config.height - self.radius)
 
-        self.speed = 0.5
+        self.speed = game_config.zombie_speed
         self.health = 50
         self.cooldown = 0
         self.injury_cooldown = 0

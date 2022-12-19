@@ -8,6 +8,8 @@ class GameConfig:
     weapons = {"pistol": 1, "uzi": 1, "shotgun": 0}
     ammo = {"uzi": 100, "shotgun": 20}
     multiplier_step = 0.0002
+    blockshead_speed = 2.0
+    zombie_speed = 0.5
     max_health = 200
     map_width = 2000
     map_height = 1500
