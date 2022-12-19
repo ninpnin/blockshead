@@ -76,27 +76,30 @@ class Blockshead(object):
         """Fires whichever weapon that blockshead is using at the moment"""
         self.bonus_score = 0
         if self.cooldown == 0:
+            shot = None
             if self.weapon == "pistol":
                 shot = Pistol(game_config, game_state)
                 self.cooldown = 30
-                return shot
-            elif self.weapon == "uzi":
-                if self.ammo() > 0:
+            elif self.ammo() > 0:
+                if self.weapon == "uzi":
                     shot = Uzi(game_config, game_state)
                     self.cooldown = 12
-                    self.ammo_dict["uzi"] = max(0, self.ammo_dict.get("uzi", 0) - 1)
-                    return shot
-            elif self.weapon == "shotgun":
-                if self.ammo() > 0:
+                    self.ammo_dict["uzi"] = max(0, self.ammo() - 1)
+                elif self.weapon == "shotgun":
                     shot = Shotgun(window, game_state)
-                    self.ammo_dict["shotgun"] = max(0, self.ammo_dict.get("shotgun", 0) - 1)
+                    self.ammo_dict["shotgun"] = max(0, self.ammo() - 1)
                     self.cooldown = 45
-                    return shot
-            elif self.weapon == "fireball":
-                if game_state.blockshead.ammo > 0:
+                elif self.weapon == "fireball":
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 45
-                    return shot
+                
+                # Automatically change to pistol if out of ammo
+                if self.ammo() == 0:
+                    self.weapon = "pistol"
+            else:
+                print("Out of ammo")
+
+            return shot
 
 class Zombie(object):
     def __init__(self, window, game_config):
