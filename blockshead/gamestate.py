@@ -9,6 +9,8 @@ class GameConfig:
     ammo = {"uzi": 100, "shotgun": 20}
     multiplier_step = 0.0002
     max_health = 200
+    map_width = 2000
+    map_height = 1500
     height: int
     width: int
 
@@ -32,6 +34,8 @@ class GameState:
     fakewalls = []
     score: int = 0
     level: int = 0
+    offset_x = 0
+    offset_y = 0
 
 @dataclass
 class Shots:

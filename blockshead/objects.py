@@ -86,14 +86,14 @@ class Pistol:
 
         return [], []
 
-    def draw(self, window):
+    def draw(self, window, game_state):
         x = min(self.shoot_x_start, self.shoot_x_end)
         width = max(self.shoot_x_start, self.shoot_x_end) - x + 1
 
         y = min(self.shoot_y_start, self.shoot_y_end)
         height = max(self.shoot_y_start, self.shoot_y_end) - y + 1
 
-        pygame.draw.rect(window, (0,0,0), (x, y, width, height))
+        pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
 
 class Uzi:
     def __init__(self, game_config, game_state):
@@ -142,14 +142,14 @@ class Uzi:
 
         return [], []
 
-    def draw(self, window):
+    def draw(self, window, game_state):
         x = min(self.shoot_x_start, self.shoot_x_end)
         width = max(self.shoot_x_start, self.shoot_x_end) - x + 1
 
         y = min(self.shoot_y_start, self.shoot_y_end)
         height = max(self.shoot_y_start, self.shoot_y_end) - y + 1
 
-        pygame.draw.rect(window, (0,0,0), (x, y, width, height))
+        pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
 
 class Shotgun:
     def __init__(self, game_config, game_state):
@@ -198,7 +198,7 @@ class Shotgun:
 
         return [], []
 
-    def draw(self, window):
+    def draw(self, window, game_state):
         for angle in [0, self.angle, -self.angle]:
             theta = np.radians(angle + random.uniform(-10, 10))
             c, s = np.cos(theta), np.sin(theta)
@@ -207,7 +207,9 @@ class Shotgun:
             x = np.array([self.shoot_x_end - self.shoot_x_start, self.shoot_y_end - self.shoot_y_start])
             x_prime = R @ x
             x_end, y_end = int(x_prime[0]) + self.shoot_x_start, int(x_prime[1]) + self.shoot_y_start
-            pygame.draw.line(window, (0,0,0), (self.shoot_x_start, self.shoot_y_start), (x_end, y_end))
+            start = self.shoot_x_start - game_state.offset_x, self.shoot_y_start  - game_state.offset_y
+            end = x_end - game_state.offset_x, y_end  - game_state.offset_y
+            pygame.draw.line(window, (0,0,0), start, end)
 
 
 class Healthbox(object):

@@ -40,9 +40,11 @@ def draw_stats(window, game_state, game_config):
 
     # Health bar
     health = game_state.blockshead.health
-    pygame.draw.rect(window, (255,0,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, 100, 10))
     healthbar_width = int(100 * health/game_config.max_health)
-    pygame.draw.rect(window, (0,128,0), (20 + game_state.blockshead.x, game_state.blockshead.y - 20, healthbar_width, 10))
+    start_x = - 40 + game_state.blockshead.x - game_state.offset_x
+    start_y = game_state.blockshead.y - 70 - game_state.offset_y
+    pygame.draw.rect(window, (255,0,0), (start_x, start_y, 100, 10))
+    pygame.draw.rect(window, (0,128,0), (start_x, start_y, healthbar_width, 10))
 
 
 def new_level(game_config, game_state, window):
@@ -113,10 +115,11 @@ def handle_keys(event, window, game_config, game_state):
             elif game_state.blockshead.x_vel != 0:
                 game_state.blockshead.direction = Direction.LEFT
                 
-def draw_screen(window, characters, debug=True):
+def draw_screen(window, characters, game_state, debug=True):
     for c in characters:
         img = c.get_image()
         c_coords = c.get_coordinates()
+        c_coords = c_coords[0] - game_state.offset_x,  c_coords[1] - game_state.offset_y
         x = c_coords[0] - img.get_width() // 2
         y = c_coords[1] - img.get_height() // 2
         window.blit(img, (x,y))
@@ -126,7 +129,7 @@ def draw_screen(window, characters, debug=True):
 
 def draw_shots(window, game_state):
     for s in game_state.shots:
-        s.draw(window)
+        s.draw(window, game_state)
 
 def update_weapons(game_config, game_state):
     new_weapons, new_ammo = [], dict()
@@ -187,9 +190,10 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             # NOTE: Order matters here
             drawables = game_state.blood_marks + game_state.fakewalls + game_state.healthboxes
             drawables = drawables + [game_state.blockshead] + game_state.zombies
-            draw_screen(window, drawables)
+            draw_screen(window, drawables, game_state)
             draw_stats(window, game_state, game_config)
             draw_shots(window, game_state)
+            game_state.offset_x += 0.5
         else:
             draw_pause_screen(window, game_config)
         
