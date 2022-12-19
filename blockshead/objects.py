@@ -100,13 +100,13 @@ class Uzi:
         blockshead = game_state.blockshead
         self.direction = blockshead.direction
         x_vel, y_vel = blockshead.direction.value
-        self.range = 250
+        self.range = 300
         self.damage = 11
         self.radius = 30
-        self.shoot_x_start = x_vel * 5 + blockshead.x
-        self.shoot_x_end = x_vel * self.range + blockshead.x + 1
-        self.shoot_y_start = y_vel * 5 + blockshead.y
-        self.shoot_y_end = y_vel * self.range + blockshead.y + 1
+        self.shoot_x_start = x_vel * (blockshead.radius - 5) + blockshead.x
+        self.shoot_x_end = x_vel * self.range + blockshead.x + 1 + y_vel * ( random.random() - 0.5) * 25
+        self.shoot_y_start = y_vel * (blockshead.radius - 5) + blockshead.y
+        self.shoot_y_end = y_vel * self.range + blockshead.y + 1 + x_vel * ( random.random() - 0.5) * 25
         self.lifetime = 3
 
         self.attacked = False
@@ -132,10 +132,6 @@ class Uzi:
     def update(self, game_config, game_state):
         self.lifetime -= 1
 
-        # Update image width
-        self.shoot_x_start = (self.shoot_x_start + self.shoot_x_end) // 2
-        self.shoot_y_start = (self.shoot_y_start + self.shoot_y_end) // 2
-
         if not self.attacked:
             self.attacked = True
             return self.contact(game_state)
@@ -143,13 +139,10 @@ class Uzi:
         return [], []
 
     def draw(self, window, game_state):
-        x = min(self.shoot_x_start, self.shoot_x_end)
-        width = max(self.shoot_x_start, self.shoot_x_end) - x + 1
-
-        y = min(self.shoot_y_start, self.shoot_y_end)
-        height = max(self.shoot_y_start, self.shoot_y_end) - y + 1
-
-        pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
+        start = self.shoot_x_start - game_state.offset_x, self.shoot_y_start  - game_state.offset_y
+        end = self.shoot_x_end - game_state.offset_x, self.shoot_y_end  - game_state.offset_y
+        pygame.draw.line(window, (200,190,170), start, end)
+        #pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
 
 class Shotgun:
     def __init__(self, game_config, game_state):
@@ -209,7 +202,7 @@ class Shotgun:
             x_end, y_end = int(x_prime[0]) + self.shoot_x_start, int(x_prime[1]) + self.shoot_y_start
             start = self.shoot_x_start - game_state.offset_x, self.shoot_y_start  - game_state.offset_y
             end = x_end - game_state.offset_x, y_end  - game_state.offset_y
-            pygame.draw.line(window, (0,0,0), start, end)
+            pygame.draw.line(window, (200,190,170), start, end)
 
 
 class Healthbox(object):

@@ -193,7 +193,18 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             draw_screen(window, drawables, game_state)
             draw_stats(window, game_state, game_config)
             draw_shots(window, game_state)
-            game_state.offset_x += 0.5
+            
+            # Calculate map offset
+            ## X-axis
+            if game_state.blockshead.x - game_state.offset_x >= game_config.width * 0.8:
+                game_state.offset_x = game_state.blockshead.x - game_config.width * 0.8
+            elif game_state.blockshead.x - game_state.offset_x <= game_config.width * 0.2:
+                game_state.offset_x = game_state.blockshead.x - game_config.width * 0.2
+            ## Y-axis
+            if game_state.blockshead.y - game_state.offset_y >= game_config.height * 0.8:
+                game_state.offset_y = game_state.blockshead.y - game_config.height * 0.8
+            elif game_state.blockshead.y - game_state.offset_y <= game_config.height * 0.2:
+                game_state.offset_y = game_state.blockshead.y - game_config.height * 0.2
         else:
             draw_pause_screen(window, game_config)
         
