@@ -1,3 +1,4 @@
+from tkinter import W
 from blockshead.gamestate import *
 from blockshead.characters import Blockshead, Zombie
 from blockshead.objects import *
@@ -127,6 +128,9 @@ def handle_keys(event, window, game_config, game_state):
                 game_state.blockshead.direction = Direction.LEFT
                 
 def draw_screen(window, characters, game_state, debug=True):
+    """
+    Draw characters and their debug circle
+    """
     for c in characters:
         img = c.get_image()
         c_coords = c.get_coordinates()
@@ -153,13 +157,19 @@ def update_weapons(game_config, game_state):
     
     return new_weapons, new_ammo
 
-def update_ammo(game_config, game_state, multiplier=2.0):
+def update_ammo(game_config, game_state, multiplier=2.0, multiplier4=8.0):
     max_ammo = {w: a for w, a in game_config.ammo.items() if w in game_state.available_weapons}
     for weapon, threshold in game_config.weapons.items():
         if weapon in game_state.available_weapons and game_state.multiplier > threshold * multiplier:
-            print(weapon, "is double")
-            if type(max_ammo[weapon]) in [float, int]:
+            if type(max_ammo.get(weapon)) in [float, int]:
                 max_ammo[weapon] = game_config.ammo[weapon] * 2
+                if max_ammo[weapon] > game_state.max_ammo.get(weapon):
+                    game_state.messages.append((f"{weapon}: Double ammo", 180))
+        if weapon in game_state.available_weapons and game_state.multiplier > threshold * multiplier4:
+            if type(max_ammo.get(weapon)) in [float, int]:
+                max_ammo[weapon] = game_config.ammo[weapon] * 4
+                if max_ammo[weapon] > game_state.max_ammo.get(weapon):
+                    game_state.messages.append((f"{weapon}: Quad ammo", 180))
 
     return max_ammo
 
@@ -206,9 +216,9 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
             new_weapons, new_ammo = update_weapons(game_config, game_state)
             game_state.available_weapons += new_weapons
+            game_state.max_ammo = update_ammo(game_config, game_state)
             if len(new_weapons) >= 1:
                 print("New weapons", new_weapons)
-                game_state.max_ammo = update_ammo(game_config, game_state)
                 for w in new_weapons:
                     game_state.blockshead.ammo_dict[w] = game_state.max_ammo[w]
                 print(game_state.max_ammo)

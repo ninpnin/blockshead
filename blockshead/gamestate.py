@@ -5,7 +5,7 @@ class GameConfig:
     canvas: bool
     background_color = "#EBDCC7"
     font = ('Helvetica','30','bold')
-    weapons = {"pistol": 1, "uzi": 1, "shotgun": 0}
+    weapons = {"pistol": 1, "uzi": 3, "shotgun": 5}
     ammo = {"uzi": 100, "shotgun": 20}
     multiplier_step = 0.0002
     blockshead_speed = 2.0
