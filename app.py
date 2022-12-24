@@ -46,6 +46,16 @@ def draw_stats(window, game_state, game_config):
     pygame.draw.rect(window, (255,0,0), (start_x, start_y, 100, 10))
     pygame.draw.rect(window, (0,128,0), (start_x, start_y, healthbar_width, 10))
 
+def draw_messages(window, game_state, game_config):
+    # Left corner title
+    game_state.messages = [(m, t -1) for m,t in game_state.messages if t >= 1]
+    x, y = game_config.width // 2 - 200, 20
+    for m, _ in game_state.messages:
+        font = pygame.font.SysFont(None, 36)
+        img = font.render(m, True, (100,100,100))
+        window.blit(img, (x, y))
+        y += 40
+
 
 def new_level(game_config, game_state, window):
     game_state.number_of_zombies += 1
@@ -62,6 +72,7 @@ def new_level(game_config, game_state, window):
         blood_mark.levelup()
         
     game_state.level += 1
+    game_state.messages.append((f"Level {game_state.level}", 180))
     
     return game_config, game_state, window
 
@@ -136,18 +147,30 @@ def update_weapons(game_config, game_state):
     for weapon, threshold in game_config.weapons.items():
         if game_state.multiplier > threshold and weapon not in game_state.available_weapons:
             print(f"New weapon: {weapon}")
+            game_state.messages.append((f"New weapon: {weapon}", 180))
             new_weapons.append(weapon)
             new_ammo[weapon] = game_config.ammo[weapon]
     
     return new_weapons, new_ammo
-    
+
+def update_ammo(game_config, game_state, multiplier=2.0):
+    max_ammo = {w: a for w, a in game_config.ammo.items() if w in game_state.available_weapons}
+    for weapon, threshold in game_config.weapons.items():
+        if weapon in game_state.available_weapons and game_state.multiplier > threshold * multiplier:
+            print(weapon, "is double")
+            if type(max_ammo[weapon]) in [float, int]:
+                max_ammo[weapon] = game_config.ammo[weapon] * 2
+
+    return max_ammo
+
 def main_loop(game_config, game_state, window, clock, levelup=False):
     game_config, game_state, window = new_level(game_config, game_state, window)
     
     for _ in range(2):
         wall = Fakewall(game_config)
         game_state.fakewalls.append(wall)
-        
+    
+    #game_state.messages.append(("ebuns", 100))
     while True:
         if len(game_state.zombies) == 0:
             game_config, game_state, window = new_level(game_config, game_state, window)
@@ -183,8 +206,12 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
             new_weapons, new_ammo = update_weapons(game_config, game_state)
             game_state.available_weapons += new_weapons
-            for weapon in new_weapons:
-                game_state.blockshead.ammo_dict[weapon] = new_ammo[weapon]
+            if len(new_weapons) >= 1:
+                print("New weapons", new_weapons)
+                game_state.max_ammo = update_ammo(game_config, game_state)
+                for w in new_weapons:
+                    game_state.blockshead.ammo_dict[w] = game_state.max_ammo[w]
+                print(game_state.max_ammo)
             
             # Draw characters and objects
             # NOTE: Order matters here
@@ -193,6 +220,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             draw_screen(window, drawables, game_state)
             draw_stats(window, game_state, game_config)
             draw_shots(window, game_state)
+            draw_messages(window, game_state, game_config)
             
             # Calculate map offset
             ## X-axis

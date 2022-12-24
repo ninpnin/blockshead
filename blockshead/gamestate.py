@@ -26,6 +26,7 @@ class GameState:
     paused = False
     multiplier = 1
     available_weapons = ["pistol"]
+    max_ammo = {"pistol": "infinity"}
     shots = []
     mines = []
     zombies = []
@@ -34,6 +35,7 @@ class GameState:
     blood_marks = []
     healthboxes = []
     fakewalls = []
+    messages = []
     score: int = 0
     level: int = 0
     offset_x = 0

@@ -229,10 +229,12 @@ class Healthbox(object):
             if self.type == "health":
                 game_state.blockshead.health = game_state.blockshead.health + self.health
                 game_state.blockshead.health = min(game_config.max_health, game_state.blockshead.health)
+                game_state.messages.append((f"Regained health", 180))
             else:
                 print(f"Picked up {self.type}")
+                game_state.messages.append((f"Picked up {self.type}", 180))
                 # Increment ammo of self.type 2/3 of max ammo, cap at max ammo
-                max_ammo = game_config.ammo[self.type]
+                max_ammo = game_state.max_ammo[self.type]
                 game_state.blockshead.ammo_dict[self.type] += 2 * max_ammo // 3
                 game_state.blockshead.ammo_dict[self.type] = min(max_ammo, game_state.blockshead.ammo_dict[self.type])
             self.active = False
