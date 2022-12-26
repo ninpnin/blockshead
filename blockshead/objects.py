@@ -110,7 +110,7 @@ class Uzi:
         self.lifetime = 3
 
         self.attacked = False
-        mixer.music.load('audio/uzi.wav')
+        mixer.music.load('audio/uzi.mp3')
         mixer.music.play()
 
     def contact(self, game_state):
@@ -238,6 +238,9 @@ class Healthbox(object):
                 game_state.blockshead.ammo_dict[self.type] += 2 * max_ammo // 3
                 game_state.blockshead.ammo_dict[self.type] = min(max_ammo, game_state.blockshead.ammo_dict[self.type])
             self.active = False
+            newlevel_audio = pygame.mixer.Sound('audio/healthbox.mp3')
+            mixer.Channel(2).play(newlevel_audio)
+
 
     def get_image(self):
         return self.image

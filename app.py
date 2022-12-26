@@ -3,6 +3,7 @@ from blockshead.gamestate import *
 from blockshead.characters import Blockshead, Zombie
 from blockshead.objects import *
 import pygame
+from pygame import mixer
 import math
 
 def initialize_game():
@@ -75,6 +76,10 @@ def new_level(game_config, game_state, window):
     game_state.level += 1
     game_state.messages.append((f"Level {game_state.level}", 180))
     
+    newlevel_audio = pygame.mixer.Sound('audio/new-level.mp3')
+    mixer.Channel(1).play(newlevel_audio)
+    #mixer.music.play()
+
     return game_config, game_state, window
 
 def handle_keys(event, window, game_config, game_state):
