@@ -3,7 +3,7 @@ import random
 import numpy as np
 from .physics import check_collision
 from .objects import Direction
-from .objects import Pistol, Blood, Uzi, Shotgun, Healthbox
+from .objects import Pistol, Blood, Uzi, Shotgun, DevilAttack, Healthbox
 import math
 
 class Blockshead(object):
@@ -103,6 +103,9 @@ class Blockshead(object):
                 print("Out of ammo")
 
             return shot
+
+    def injure(self, damage, game_state):
+        self.health -= damage
 
 class Zombie(object):
     def __init__(self, window, game_config):
@@ -207,7 +210,7 @@ class Zombie(object):
         horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
         vertical = abs(target.y - self.y) < target.radius + self.radius + 2
         if horizontal and vertical and self.cooldown == 0:
-            target.health -= 1
+            target.injure(1, game_state)
             self.cooldown = 10
     
     def injure(self, damage, game_state):
@@ -304,8 +307,14 @@ class Devil(object):
         horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
         vertical = abs(target.y - self.y) < target.radius + self.radius + 2
         if horizontal and vertical and self.cooldown == 0:
-            target.health -= 1
+            target.injure(1, game_state)
             self.cooldown = 10
+        elif self.cooldown == 0:
+            print("Devil attack")
+            attack = DevilAttack(self, game_state)
+            game_state.shots.append(attack)
+            self.cooldown = 300
+            self.injury_cooldown = 70
     
     def injure(self, damage, game_state):
         self.health -= damage

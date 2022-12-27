@@ -209,46 +209,54 @@ class Shotgun:
 
 class DevilAttack:
     def __init__(self, devil, game_state):
+        self.speed = 3.5
+        self.devil = devil
         blockshead = game_state.blockshead
-        self.direction = blockshead.direction
-        x_vel, y_vel = blockshead.direction.value
-        self.damage = 11
-        self.lifetime = 60
+        self.direction = np.array([blockshead.x - devil.x, blockshead.y - devil.y])
+        self.direction = self.direction / np.linalg.norm(self.direction) * self.speed
+
+        self.image = pygame.image.load("images/game_elements/devil_a_old.png")
+        self.radius = 30
+        initial_step = self.direction * (self.radius / 2) / self.speed
+        self.x = devil.x + initial_step[0]
+        self.y = devil.y + initial_step[1]
+        self.damage = 30
+        self.lifetime = 80
 
         self.attacked = False
         #mixer.music.load('audio/uzi.mp3')
         #mixer.music.play()
 
     def contact(self, game_state):
-        killed_zombies, killed_devils = [], []
-
-        max_x, min_x = max(self.shoot_x_start, self.shoot_x_end), min(self.shoot_x_start, self.shoot_x_end)
-        max_y, min_y = max(self.shoot_y_start, self.shoot_y_end), min(self.shoot_y_start, self.shoot_y_end)
-        
-        # Calculate damage inflicted on regular zombies
-        killed_zombies = []
-        for zombie in game_state.zombies + game_state.devils:
-            cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
-            cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
-            if cond_x and cond_y:
+        hit = False
+        for zombie in game_state.zombies + game_state.devils + [game_state.blockshead]:
+            if zombie == self.devil:
+                continue
+            diff_x = zombie.x - self.x
+            diff_y = zombie.y - self.y
+            if np.sqrt(diff_x ** 2 + diff_y ** 2) <= self.radius:
                 zombie.injure(self.damage, game_state)
+                hit = True
 
-        return killed_zombies, killed_devils
+        return hit
 
     def update(self, game_config, game_state):
         self.lifetime -= 1
 
+        self.x += self.direction[0]
+        self.y += self.direction[1]
+
         if not self.attacked:
-            self.attacked = True
-            return self.contact(game_state)
+            self.attacked = self.contact(game_state)
+        else:
+            self.lifetime = -1
 
         return [], []
 
     def draw(self, window, game_state):
-        start = self.shoot_x_start - game_state.offset_x, self.shoot_y_start  - game_state.offset_y
-        end = self.shoot_x_end - game_state.offset_x, self.shoot_y_end  - game_state.offset_y
-        pygame.draw.line(window, (200,190,170), start, end)
-        #pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
+        x = self.x - self.image.get_width() // 2
+        y = self.y - self.image.get_height() // 2
+        window.blit(self.image, (x,y))
 
 class Healthbox(object):
     """Static object for drawing blood on the ground"""
