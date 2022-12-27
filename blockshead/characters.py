@@ -126,7 +126,7 @@ class Zombie(object):
         self.cooldown = 0
         self.injury_cooldown = 0
         self.multiplier = 0.5
-        self.angles = [0, 30, -30, 60, -60, 90, -90, 110, -110, 130, -130]
+        self.angles = [0, 45, -45, 90, -90]
 
         # Randomize movement on enemy level
         if random.choice([True, False, False]):
@@ -157,6 +157,17 @@ class Zombie(object):
 
         diff = np.array([self.x - target.x, self.y - target.y])
         diff = diff / np.linalg.norm(diff) * self.speed
+        
+        dotprod, best_diff = -100.0, Direction.UP.value
+        for d in Direction:
+            d = d.value / np.linalg.norm(d.value)
+            matching = np.dot(d, diff)
+            if matching >= dotprod:
+                dotprod = matching
+                best_diff = d
+                
+        diff = best_diff * self.speed
+            
         
         old_x, old_y = self.x, self.y
         for angle in self.angles:
