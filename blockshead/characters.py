@@ -306,10 +306,10 @@ class Devil(object):
         target = game_state.blockshead
         horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
         vertical = abs(target.y - self.y) < target.radius + self.radius + 2
-        if horizontal and vertical and self.cooldown == 0:
+        if horizontal and vertical and self.cooldown == 0 and self.injury_cooldown == 0:
             target.injure(1, game_state)
             self.cooldown = 10
-        elif self.cooldown == 0:
+        elif self.cooldown == 0 and self.injury_cooldown == 0:
             print("Devil attack")
             attack = DevilAttack(self, game_state)
             game_state.shots.append(attack)
