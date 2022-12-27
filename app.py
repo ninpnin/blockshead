@@ -1,6 +1,6 @@
 from tkinter import W
 from blockshead.gamestate import *
-from blockshead.characters import Blockshead, Zombie
+from blockshead.characters import Blockshead, Zombie, Devil
 from blockshead.objects import *
 import pygame
 from pygame import mixer
@@ -67,6 +67,11 @@ def new_level(game_config, game_state, window):
         if not zombie._check_collisions(zombie.x, zombie.y, game_state, game_config):
             game_state.zombies.append(zombie)
     
+    while len(game_state.devils) < 1:
+        devil = Devil(window, game_config)
+        if not devil._check_collisions(devil.x, devil.y, game_state, game_config):
+            game_state.devils.append(devil)
+
     healthbox = Healthbox(game_config, game_state)
     game_state.healthboxes.append(healthbox)
     
@@ -203,7 +208,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             
             # Move characters
             game_state.blockshead.move(game_config, game_state)
-            for zombie in game_state.zombies:
+            for zombie in game_state.devils + game_state.zombies:
                 zombie.move(window, game_config, game_state)
                 zombie.contact(game_state)
 
@@ -215,6 +220,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
                 healthbox.update(game_config, game_state)
 
             game_state.zombies = [z for z in game_state.zombies if z.health >= 1]
+            game_state.devils = [z for z in game_state.devils if z.health >= 1]
             game_state.shots = [s for s in game_state.shots if s.lifetime >= 0]
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
             game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
@@ -231,7 +237,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             # Draw characters and objects
             # NOTE: Order matters here
             drawables = game_state.blood_marks + game_state.fakewalls + game_state.healthboxes
-            drawables = drawables + [game_state.blockshead] + game_state.zombies
+            drawables = drawables + [game_state.blockshead] + game_state.zombies + game_state.devils
             draw_screen(window, drawables, game_state)
             draw_stats(window, game_state, game_config)
             draw_shots(window, game_state)

@@ -195,3 +195,98 @@ class Zombie(object):
             game_state.blood_marks.append(blood_mark)
             game_state.score += int(5 * game_state.multiplier)
             game_state.multiplier += self.multiplier
+
+class Devil(object):
+    def __init__(self, window, game_config):
+        self.direction = Direction.UP
+        self.images = {}
+        for direction in Direction:
+            # 8 different devil images
+            self.images[direction] = pygame.image.load(f"images/devils/d{direction.name.lower()}.png")
+
+        # pick a random starting point on the right side of the field. Zombies start on the left half.
+        self.radius = 35
+        self.x = random.randrange(self.radius, game_config.width // 4)
+        self.y = random.randrange(self.radius, game_config.height - self.radius)
+
+        self.speed = game_config.devil_speed
+        self.health = 150
+        self.cooldown = 0
+        self.injury_cooldown = 0
+        self.multiplier = 0.5
+        self.angles = [0, 30, -30, 60, -60, 90, -90, 110, -110, 130, -130]
+
+        # Randomize movement on enemy level
+        if random.choice([True, False, False]):
+            self.angles = [20] + self.angles
+        elif random.choice([True, False]):
+            self.angles = [-20] + self.angles
+    
+    def _check_collisions(self, x, y, game_state, game_config):
+        if x >= game_config.width or x < 0:
+            return True
+        if y >= game_config.height or y < 0:
+            return True
+
+        for zombie in game_state.zombies + game_state.fakewalls + [game_state.blockshead]:
+            if zombie is self:
+                continue
+            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
+            if dist < zombie.radius + self.radius:
+                return True
+        return False
+
+    def move(self, window, game_config, game_state):
+        target = game_state.blockshead
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        if self.injury_cooldown > 0:
+            self.injury_cooldown -= 1
+            return
+
+        diff = np.array([self.x - target.x, self.y - target.y])
+        diff = diff / np.linalg.norm(diff) * self.speed
+        
+        for angle in self.angles:
+            theta = np.radians(angle)
+            c, s = np.cos(theta), np.sin(theta)
+            R = np.array(((c, -s), (s, c)))
+            direction = R @ diff
+            next_x = self.x - direction[0]
+            next_y = self.y - direction[1]
+
+            collisions = self._check_collisions(next_x, next_y, game_state, game_config)
+            if not collisions:
+                self.x = next_x
+                self.y = next_y
+
+                break
+                    
+        # Cooldown period for shooting
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        if self.injury_cooldown > 0:
+            self.injury_cooldown -= 1
+
+    def get_coordinates(self):
+        return int(self.x), int(self.y)
+
+    def get_image(self):            
+        return self.images[self.direction]
+
+    def contact(self, game_state):
+        target = game_state.blockshead
+        horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
+        vertical = abs(target.y - self.y) < target.radius + self.radius + 2
+        if horizontal and vertical and self.cooldown == 0:
+            target.health -= 1
+            self.cooldown = 10
+    
+    def injure(self, damage, game_state):
+        self.health -= damage
+        self.injury_cooldown = 11
+        if self.health <= 1:
+            blood_mark = Blood(self.x, self.y)
+            game_state.blood_marks.append(blood_mark)
+            game_state.score += int(5 * game_state.multiplier)
+            game_state.multiplier += self.multiplier

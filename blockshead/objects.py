@@ -63,7 +63,7 @@ class Pistol:
         
         # Calculate damage inflicted on regular zombies
         killed_zombies = []
-        for zombie in game_state.zombies:
+        for zombie in game_state.zombies + game_state.devils:
             cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
             cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
@@ -121,7 +121,7 @@ class Uzi:
         
         # Calculate damage inflicted on regular zombies
         killed_zombies = []
-        for zombie in game_state.zombies:
+        for zombie in game_state.zombies + game_state.devils:
             cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
             cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
@@ -168,7 +168,7 @@ class Shotgun:
         killed_zombies, killed_devils = [], []
 
         # Does damage if distance <= max distance and angle < max angle
-        for zombie in game_state.zombies:
+        for zombie in game_state.zombies + game_state.devils:
             diff = np.array([zombie.x - self.shoot_x_start, zombie.y - self.shoot_y_start])
             distance = np.linalg.norm(diff)
             cosine = np.dot(diff / np.linalg.norm(diff), self.direction)
