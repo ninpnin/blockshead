@@ -254,8 +254,8 @@ class DevilAttack:
         return [], []
 
     def draw(self, window, game_state):
-        x = self.x - self.image.get_width() // 2
-        y = self.y - self.image.get_height() // 2
+        x = self.x - self.image.get_width() // 2 - game_state.offset_x
+        y = self.y - self.image.get_height() // 2 - game_state.offset_y
         window.blit(self.image, (x,y))
 
 class Healthbox(object):
