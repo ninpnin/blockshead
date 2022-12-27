@@ -20,10 +20,6 @@ def draw_pause_screen(window, game_config):
     font = pygame.font.SysFont(None, 36)
     img = font.render("Paused. Press 'P' to continue", True, (100,100,100))
     window.blit(img, (20, 20))
-
-def end_game(window, game_config, game_state):
-    # TODO: print text
-    end_text = f'Game Over!\nFinal Score: {math.ceil(game_state.score)}, Final Level: {game_state.level -1}'
     
 def draw_stats(window, game_state, game_config):
     # Left corner title
@@ -189,6 +185,37 @@ def update_ammo(game_config, game_state, multiplier=2.0, multiplier4=8.0):
 
     return max_ammo
 
+def draw_end_screen(game_state, window):
+    window.fill(game_config.background_color)
+    font = pygame.font.SysFont(None, 36)
+
+    text1 = f"Game over!"
+    img1 = font.render(text1, True, (100,100,100))
+    window.blit(img1, (20, 20))
+
+    text2 = f"Final Score: {math.ceil(game_state.score)}, Final Level: {game_state.level -1}"
+    img2 = font.render(text2, True, (100,100,100))
+    window.blit(img2, (20, 60))
+
+    text3 = f"Press R to start a new game. Press any other key to quit"
+    img3 = font.render(text3, True, (100,100,100))
+    window.blit(img3, (20, 100))
+
+def end_loop(game_state, window, clock):
+    print("End loop")
+    draw_end_screen(game_state, window)
+    pygame.display.update()
+    while True:
+        dt = clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            elif event.type == pygame.KEYDOWN:
+                return event.key == pygame.K_r
+
+        #draw_end_screen(game_state, window)
+        #pygame.display.update()
+
 def main_loop(game_config, game_state, window, clock, levelup=False):
     game_config, game_state, window = new_level(game_config, game_state, window)
     
@@ -278,5 +305,8 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
 
 if __name__ == "__main__":
     clock = pygame.time.Clock()
-    game_config, game_state, window = initialize_game()
-    main_loop(game_config, game_state, window, clock)
+    start_new_game = True
+    while start_new_game:
+        game_config, game_state, window = initialize_game()
+        main_loop(game_config, game_state, window, clock)
+        start_new_game = end_loop(game_state, window, clock)
