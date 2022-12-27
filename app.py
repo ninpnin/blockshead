@@ -64,12 +64,12 @@ def new_level(game_config, game_state, window):
     game_state.zombies = []
     while len(game_state.zombies) < game_state.number_of_zombies:
         zombie = Zombie(window, game_config)
-        if not zombie._check_collisions(zombie.x, zombie.y, game_state, game_config):
+        if not zombie._check_collisions(game_state, game_config):
             game_state.zombies.append(zombie)
     
     while len(game_state.devils) < 1:
         devil = Devil(window, game_config)
-        if not devil._check_collisions(devil.x, devil.y, game_state, game_config):
+        if not devil._check_collisions(game_state, game_config):
             game_state.devils.append(devil)
 
     healthbox = Healthbox(game_config, game_state)
@@ -150,12 +150,16 @@ def draw_screen(window, characters, game_state, debug=True):
         window.blit(img, (x,y))
 
         if debug:
-            pygame.draw.circle(window, (0,255,0), c_coords, c.radius, 3)
+            x_hitbox_start = c_coords[0] - c.width // 2
+            y_hitbox_start = c_coords[1] - c.height // 2
+            x_hitbox_end = c.width
+            y_hitbox_end = c.height
+            pygame.draw.rect(window, (0,255,0), (x_hitbox_start, y_hitbox_start, x_hitbox_end, y_hitbox_end), 3)
 
 def draw_shots(window, game_state):
     for s in game_state.shots:
         s.draw(window, game_state)
-
+        
 def update_weapons(game_config, game_state):
     new_weapons, new_ammo = [], dict()
     for weapon, threshold in game_config.weapons.items():

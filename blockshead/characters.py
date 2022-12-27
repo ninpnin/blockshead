@@ -1,6 +1,7 @@
 import pygame
 import random
 import numpy as np
+from .physics import check_collision
 from .objects import Direction
 from .objects import Pistol, Blood, Uzi, Shotgun
 import math
@@ -13,6 +14,9 @@ class Blockshead(object):
         self.images[Direction.LEFT] = pygame.image.load("images/blockshead/bhleft.png")
         self.images[Direction.RIGHT] = pygame.image.load("images/blockshead/bhright.png")
         self.radius = 35
+        self.width = 2 * self.radius
+        self.height = 2 * self.radius
+        
         self.x = random.randrange(self.radius, game_config.width - self.radius)
         self.y = random.randrange(self.radius, game_config.height - self.radius)
         self.direction = Direction.UP
@@ -35,10 +39,10 @@ class Blockshead(object):
     def get_image(self):            
         return self.images[self.direction]
 
-    def _check_collisions(self, x, y, game_state, radius=30):
+    def _check_collisions(self, game_state):
         for zombie in game_state.zombies + game_state.fakewalls:
-            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
-            if dist < zombie.radius + self.radius:
+            if check_collision(self, zombie):
+                print(zombie)
                 return True
         return False
 
@@ -60,18 +64,18 @@ class Blockshead(object):
         speed = self.speed / speed
         next_x = self.x + self.x_vel * speed
         next_y = self.y + self.y_vel * speed
-        radius = 5
-        # TODO: collitions
         
-        if not self._check_collisions(next_x, next_y, game_state):
-            self.x = next_x
-            self.y = next_y
+        old_x, old_y = self.x, self.y
+        self.x = next_x
+        self.y = next_y
+        if self._check_collisions(game_state):
+            self.x, self.y = old_x, old_y
 
         self.cooldown = max(0, self.cooldown - 1)
 
     def get_coordinates(self):
         return int(self.x), int(self.y)
-
+    
     def fire_gun(self, window, game_config, game_state):
         """Fires whichever weapon that blockshead is using at the moment"""
         self.bonus_score = 0
@@ -111,6 +115,9 @@ class Zombie(object):
 
         # pick a random starting point on the right side of the field. Zombies start on the left half.
         self.radius = 35
+        self.width = 2 * self.radius
+        self.height = 2 * self.radius
+
         self.x = random.randrange(self.radius, game_config.width // 4)
         self.y = random.randrange(self.radius, game_config.height - self.radius)
 
@@ -127,17 +134,16 @@ class Zombie(object):
         elif random.choice([True, False]):
             self.angles = [-20] + self.angles
     
-    def _check_collisions(self, x, y, game_state, game_config):
-        if x >= game_config.width or x < 0:
+    def _check_collisions(self, game_state, game_config):
+        if self.x >= game_config.width or self.x < 0:
             return True
-        if y >= game_config.height or y < 0:
+        if self.y >= game_config.height or self.y < 0:
             return True
 
-        for zombie in game_state.zombies + game_state.fakewalls + [game_state.blockshead]:
+        for zombie in game_state.zombies + game_state.devils + game_state.fakewalls + [game_state.blockshead]:
             if zombie is self:
                 continue
-            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
-            if dist < zombie.radius + self.radius:
+            if check_collision(self, zombie):
                 return True
         return False
 
@@ -152,6 +158,7 @@ class Zombie(object):
         diff = np.array([self.x - target.x, self.y - target.y])
         diff = diff / np.linalg.norm(diff) * self.speed
         
+        old_x, old_y = self.x, self.y
         for angle in self.angles:
             theta = np.radians(angle)
             c, s = np.cos(theta), np.sin(theta)
@@ -160,11 +167,12 @@ class Zombie(object):
             next_x = self.x - direction[0]
             next_y = self.y - direction[1]
 
-            collisions = self._check_collisions(next_x, next_y, game_state, game_config)
-            if not collisions:
-                self.x = next_x
-                self.y = next_y
-
+            self.x = next_x
+            self.y = next_y
+            collisions = self._check_collisions(game_state, game_config)
+            if collisions:
+                self.x, self.y = old_x, old_y
+            else:
                 break
                     
         # Cooldown period for shooting
@@ -206,6 +214,9 @@ class Devil(object):
 
         # pick a random starting point on the right side of the field. Zombies start on the left half.
         self.radius = 35
+        self.width = 2 * self.radius
+        self.height = 2 * self.radius
+        
         self.x = random.randrange(self.radius, game_config.width // 4)
         self.y = random.randrange(self.radius, game_config.height - self.radius)
 
@@ -222,17 +233,16 @@ class Devil(object):
         elif random.choice([True, False]):
             self.angles = [-20] + self.angles
     
-    def _check_collisions(self, x, y, game_state, game_config):
-        if x >= game_config.width or x < 0:
+    def _check_collisions(self, game_state, game_config):
+        if self.x >= game_config.width or self.x < 0:
             return True
-        if y >= game_config.height or y < 0:
+        if self.y >= game_config.height or self.y < 0:
             return True
 
-        for zombie in game_state.zombies + game_state.fakewalls + [game_state.blockshead]:
+        for zombie in game_state.zombies + game_state.devils + game_state.fakewalls + [game_state.blockshead]:
             if zombie is self:
                 continue
-            dist = math.sqrt((zombie.x - x)**2 + (zombie.y - y)**2)
-            if dist < zombie.radius + self.radius:
+            if check_collision(self, zombie):
                 return True
         return False
 
@@ -247,19 +257,19 @@ class Devil(object):
         diff = np.array([self.x - target.x, self.y - target.y])
         diff = diff / np.linalg.norm(diff) * self.speed
         
+        old_x, old_y = self.x, self.y
         for angle in self.angles:
             theta = np.radians(angle)
             c, s = np.cos(theta), np.sin(theta)
             R = np.array(((c, -s), (s, c)))
             direction = R @ diff
-            next_x = self.x - direction[0]
-            next_y = self.y - direction[1]
+            self.x = self.x - direction[0]
+            self.y = self.y - direction[1]
 
-            collisions = self._check_collisions(next_x, next_y, game_state, game_config)
-            if not collisions:
-                self.x = next_x
-                self.y = next_y
-
+            collisions = self._check_collisions(game_state, game_config)
+            if collisions:
+                self.x, self.y = old_x, old_y
+            else:
                 break
                     
         # Cooldown period for shooting

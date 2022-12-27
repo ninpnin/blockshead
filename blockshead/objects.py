@@ -23,6 +23,9 @@ class Blood(object):
         self.x = x
         self.y = y
         self.radius = 30
+        self.width = self.radius
+        self.height = self.radius
+
 
     def get_coordinates(self):
         return int(self.x), int(self.y)
@@ -212,6 +215,9 @@ class Healthbox(object):
         self.y = random.randrange(0, game_config.height)
         self.image = pygame.image.load("images/game_elements/healthbox.png")
         self.radius = 25
+        self.width = self.radius
+        self.height = self.radius
+
         types = ["health"]
         available_weapons = [w for w in game_state.available_weapons if w != "pistol"]
         if len(available_weapons) > 1:
@@ -255,6 +261,8 @@ class Fakewall(object):
         self.y = random.randrange(0, game_config.height)
         self.image = pygame.image.load("images/game_elements/fakewall80.png")
         self.radius = 35
+        self.width = self.radius
+        self.height = self.radius
         
     def get_image(self):
         return self.image
