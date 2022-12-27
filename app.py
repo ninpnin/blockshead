@@ -213,9 +213,6 @@ def end_loop(game_state, window, clock):
             elif event.type == pygame.KEYDOWN:
                 return event.key == pygame.K_r
 
-        #draw_end_screen(game_state, window)
-        #pygame.display.update()
-
 def main_loop(game_config, game_state, window, clock, levelup=False):
     game_config, game_state, window = new_level(game_config, game_state, window)
     

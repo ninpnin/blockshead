@@ -207,6 +207,48 @@ class Shotgun:
             end = x_end - game_state.offset_x, y_end  - game_state.offset_y
             pygame.draw.line(window, (200,190,170), start, end)
 
+class DevilAttack:
+    def __init__(self, devil, game_state):
+        blockshead = game_state.blockshead
+        self.direction = blockshead.direction
+        x_vel, y_vel = blockshead.direction.value
+        self.damage = 11
+        self.lifetime = 60
+
+        self.attacked = False
+        #mixer.music.load('audio/uzi.mp3')
+        #mixer.music.play()
+
+    def contact(self, game_state):
+        killed_zombies, killed_devils = [], []
+
+        max_x, min_x = max(self.shoot_x_start, self.shoot_x_end), min(self.shoot_x_start, self.shoot_x_end)
+        max_y, min_y = max(self.shoot_y_start, self.shoot_y_end), min(self.shoot_y_start, self.shoot_y_end)
+        
+        # Calculate damage inflicted on regular zombies
+        killed_zombies = []
+        for zombie in game_state.zombies + game_state.devils:
+            cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
+            cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
+            if cond_x and cond_y:
+                zombie.injure(self.damage, game_state)
+
+        return killed_zombies, killed_devils
+
+    def update(self, game_config, game_state):
+        self.lifetime -= 1
+
+        if not self.attacked:
+            self.attacked = True
+            return self.contact(game_state)
+
+        return [], []
+
+    def draw(self, window, game_state):
+        start = self.shoot_x_start - game_state.offset_x, self.shoot_y_start  - game_state.offset_y
+        end = self.shoot_x_end - game_state.offset_x, self.shoot_y_end  - game_state.offset_y
+        pygame.draw.line(window, (200,190,170), start, end)
+        #pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
 
 class Healthbox(object):
     """Static object for drawing blood on the ground"""

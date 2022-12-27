@@ -159,14 +159,13 @@ class Zombie(object):
         
         dotprod, best_diff = -100.0, Direction.UP.value
         for d in Direction:
-            d = d.value / np.linalg.norm(d.value)
-            matching = np.dot(d, diff)
+            d_val = d.value / np.linalg.norm(d.value)
+            matching = np.dot(d_val, diff)
             if matching >= dotprod:
                 dotprod = matching
-                best_diff = d
+                best_diff = d_val
                 
         diff = best_diff * self.speed
-            
         
         old_x, old_y = self.x, self.y
         for angle in self.angles:
@@ -183,6 +182,12 @@ class Zombie(object):
             if collisions:
                 self.x, self.y = old_x, old_y
             else:
+                # Calculate which direction is the best aligned with where the zombie ends up going
+                dirs = [(d_prime, d_prime.value / np.linalg.norm(d_prime.value)) for d_prime in Direction]
+                dirs_dots = [(d_prime, np.dot(-direction, d_prime_val)) for d_prime, d_prime_val in dirs]
+                self.direction = max(dirs_dots, key=lambda t: t[1])[0]
+
+                # Exit loop if no collisions are found
                 break
                     
         # Cooldown period for shooting
