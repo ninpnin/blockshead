@@ -42,7 +42,6 @@ class Blockshead(object):
     def _check_collisions(self, game_state):
         for zombie in game_state.zombies + game_state.fakewalls:
             if check_collision(self, zombie):
-                print(zombie)
                 return True
         return False
 

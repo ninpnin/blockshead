@@ -194,11 +194,17 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
         wall = Fakewall(game_config)
         game_state.fakewalls.append(wall)
     
+    fps = []
     #game_state.messages.append(("ebuns", 100))
     while True:
         if len(game_state.zombies) == 0:
             game_config, game_state, window = new_level(game_config, game_state, window)
         dt = clock.tick(60)
+        fps = fps[-10:]
+        fps.append(1000/ dt)
+
+        title_str = f"blockshead – {np.mean(fps):.0f} fps"
+        pygame.display.set_caption(title_str)
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
