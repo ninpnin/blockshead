@@ -3,7 +3,7 @@ import random
 import numpy as np
 from .physics import check_collision
 from .objects import Direction
-from .objects import Pistol, Blood, Uzi, Shotgun
+from .objects import Pistol, Blood, Uzi, Shotgun, Healthbox
 import math
 
 class Blockshead(object):
@@ -307,6 +307,8 @@ class Devil(object):
         self.injury_cooldown = 11
         if self.health <= 1:
             blood_mark = Blood(self.x, self.y)
+            healthbox = Healthbox(game_state, self.x, self.y)
             game_state.blood_marks.append(blood_mark)
+            game_state.healthboxes.append(healthbox)
             game_state.score += int(5 * game_state.multiplier)
             game_state.multiplier += self.multiplier

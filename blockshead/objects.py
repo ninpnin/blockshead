@@ -210,9 +210,9 @@ class Shotgun:
 
 class Healthbox(object):
     """Static object for drawing blood on the ground"""
-    def __init__(self, game_config, game_state):
-        self.x = random.randrange(0, game_config.width) # create Zombies in the left half of the arena
-        self.y = random.randrange(0, game_config.height)
+    def __init__(self, game_state, x, y):
+        self.x = x
+        self.y = y
         self.image = pygame.image.load("images/game_elements/healthbox.png")
         self.radius = 25
         self.width = self.radius

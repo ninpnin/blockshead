@@ -72,7 +72,9 @@ def new_level(game_config, game_state, window):
         if not devil._check_collisions(game_state, game_config):
             game_state.devils.append(devil)
 
-    healthbox = Healthbox(game_config, game_state)
+    healthbox_x = random.randrange(0, game_config.width)
+    healthbox_y = random.randrange(0, game_config.height)
+    healthbox = Healthbox(game_state, healthbox_x, healthbox_y)
     game_state.healthboxes.append(healthbox)
     
     for blood_mark in game_state.blood_marks:
@@ -205,6 +207,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
 
         title_str = f"blockshead – {np.mean(fps):.0f} fps"
         pygame.display.set_caption(title_str)
+
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
