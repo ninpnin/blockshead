@@ -95,7 +95,8 @@ class Blockshead(object):
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 45
                 elif self.weapon == "fake walls":
-                    coords = self.x + self.width + 1, self.y + self.height + 1
+                    xvel, yvel = self.direction.value
+                    coords = self.x - xvel * self.width + 1, self.y - yvel * (self.height+10) + 1
                     wall = Fakewall(game_config, init_coords=coords)
                     collisions = False
                     for zombie in game_state.zombies + game_state.devils + game_state.fakewalls:
