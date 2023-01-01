@@ -10,12 +10,12 @@ Simple 2D shooter game written in Python. To be ported to use pygame or similar 
   - [x] Shooting
   - [x] Simple opponent AI
   - [x] Pausing the game
-  - [ ] Obstacles
+  - [x] Obstacles
   - [x] Health boxes
 - [ ] Weapons
   - [x] Pistol
   - [x] UZI
-  - [ ] Shotgun
+  - [x] Shotgun
   - [x] Walls
   - [ ] Mines
   - [ ] Custom weapons
