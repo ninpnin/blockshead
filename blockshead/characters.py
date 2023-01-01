@@ -3,7 +3,7 @@ import random
 import numpy as np
 from .physics import check_collision
 from .objects import Direction
-from .objects import Pistol, Blood, Uzi, Shotgun, DevilAttack, Healthbox
+from .objects import Pistol, Blood, Uzi, Shotgun, DevilAttack, Healthbox, Fakewall
 import math
 
 class Blockshead(object):
@@ -94,10 +94,20 @@ class Blockshead(object):
                 elif self.weapon == "fireball":
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 45
-                elif self.weapon == "fakewall":
-                    #shot = Fireball(window, game_config, game_state)
-                    print("fakewall")
-                    self.cooldown = 15
+                elif self.weapon == "fake walls":
+                    coords = self.x + self.width + 1, self.y + self.height + 1
+                    wall = Fakewall(game_config, init_coords=coords)
+                    collisions = False
+                    for zombie in game_state.zombies + game_state.devils + game_state.fakewalls:
+                        if check_collision(wall, zombie):
+                            collisions = True
+                    if not collisions:
+                        print("fakewall added")
+                        game_state.fakewalls.append(wall)
+                        self.ammo_dict["fake walls"] = max(0, self.ammo() - 1)
+                        self.cooldown = 15
+                    else:    
+                        print("fakewall not possible here")
                 
                 # Automatically change to pistol if out of ammo
                 if self.ammo() == 0:
@@ -128,6 +138,9 @@ class Zombie(object):
             self.y = random.randrange(self.radius, game_config.height - self.radius)
         else:
             self.x, self.y = init_coords
+        
+        # Rolling average location
+        self.x_average, self.y_average = self.x, self.y
 
         self.speed = game_config.zombie_speed
         self.health = 50
@@ -157,6 +170,10 @@ class Zombie(object):
 
     def move(self, window, game_config, game_state):
         target = game_state.blockshead
+        
+        self.x_average = self.x_average * 0.9 + self.x * 0.1
+        self.y_average = self.y_average * 0.9 + self.y * 0.1
+        self.stuck = math.sqrt((self.x_average -self.x) ** 2 + (self.y_average - self.y) ** 2) <= 3
         if self.cooldown > 0:
             self.cooldown -= 1
             return
@@ -217,7 +234,11 @@ class Zombie(object):
         # Only attack walls if they are directly in the way of blockshead
         bh_diff = np.array([bh.x - self.x, bh.y - self.y])
         bh_diff = bh_diff / np.linalg.norm(bh_diff)
-        for target in [game_state.blockshead] + game_state.fakewalls:
+        
+        targets = [game_state.blockshead]
+        if self.stuck:
+            targets += game_state.fakewalls
+        for target in targets:
             target_diff = np.array([target.x - self.x, target.y - self.y])
             target_diff = target_diff / np.linalg.norm(target_diff)
             cosine = np.dot(target_diff, bh_diff)
@@ -258,7 +279,9 @@ class Devil(object):
         
         self.x = random.randrange(self.radius, game_config.width // 4)
         self.y = random.randrange(self.radius, game_config.height - self.radius)
-
+        self.x_average = self.x
+        self.y_average = self.y
+        
         self.speed = game_config.devil_speed
         self.health = 150
         self.cooldown = 0
@@ -316,6 +339,9 @@ class Devil(object):
             self.cooldown -= 1
         if self.injury_cooldown > 0:
             self.injury_cooldown -= 1
+            
+        self.x_average = self.x_average * 0.9 + self.x * 0.1
+        self.y_average = self.y_average * 0.9 + self.y * 0.1
 
     def get_coordinates(self):
         return int(self.x), int(self.y)

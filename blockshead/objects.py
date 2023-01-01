@@ -306,9 +306,12 @@ class Healthbox(object):
 
 
 class Fakewall(object):
-    def __init__(self, game_config):
-        self.x = random.randrange(0, game_config.width)
-        self.y = random.randrange(0, game_config.height)
+    def __init__(self, game_config, init_coords=None):
+        if init_coords is None:
+            self.x = random.randrange(0, game_config.width)
+            self.y = random.randrange(0, game_config.height)
+        else:
+            self.x, self.y = init_coords
         self.image = pygame.image.load("images/game_elements/fakewall80.png")
         self.width = 60
         self.height = 80

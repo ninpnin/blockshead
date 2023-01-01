@@ -5,8 +5,8 @@ class GameConfig:
     canvas: bool
     background_color = "#EBDCC7"
     font = ('Helvetica','30','bold')
-    weapons = {"pistol": 1, "uzi": 3, "shotgun": 5, "fakewalls": 10}
-    ammo = {"uzi": 100, "shotgun": 20, "fakewalls": 10}
+    weapons = {"pistol": 1, "uzi": 3, "shotgun": 5, "fake walls": 1}
+    ammo = {"uzi": 100, "shotgun": 20, "fake walls": 10}
     multiplier_step = 0.0002
     blockshead_speed = 2.0
     zombie_speed = 0.5
