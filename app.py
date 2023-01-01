@@ -66,20 +66,21 @@ def add_zombies(game_config, game_state, window):
         if not zombie._check_collisions(game_state, game_config):
             game_state.zombies.append(zombie)
             game_state.level_zombies -= 1
-            print("Add zombie...")
-            
-    #return game_config, game_state
+
+    devil_rate = 0.05
+    if np_choice([True, False], p=[devil_rate, 1.0 - devil_rate]):
+        if game_state.level_devils >= 1:
+            devil = Devil(window, game_config)
+            if not devil._check_collisions(game_state, game_config):
+                game_state.devils.append(devil)
+                game_state.level_devils -= 1
         
 def new_level(game_config, game_state, window):
     game_state.number_of_zombies += 2
     game_state.level_zombies = game_state.number_of_zombies
+    game_state.level_devils = 1 + game_state.number_of_zombies // 10
     game_state.zombies = []
     
-    while len(game_state.devils) < 1:
-        devil = Devil(window, game_config)
-        if not devil._check_collisions(game_state, game_config):
-            game_state.devils.append(devil)
-
     healthbox_x = random.randrange(0, game_config.width)
     healthbox_y = random.randrange(0, game_config.height)
     healthbox = Healthbox(game_state, healthbox_x, healthbox_y)
