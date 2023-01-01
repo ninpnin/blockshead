@@ -13,12 +13,11 @@ class Blockshead(object):
         self.images[Direction.DOWN] = pygame.image.load("images/blockshead/bhdown.png")
         self.images[Direction.LEFT] = pygame.image.load("images/blockshead/bhleft.png")
         self.images[Direction.RIGHT] = pygame.image.load("images/blockshead/bhright.png")
-        self.radius = 35
-        self.width = 2 * self.radius
-        self.height = 2 * self.radius
+        self.width = 70
+        self.height = self.width
         
-        self.x = random.randrange(self.radius, game_config.width - self.radius)
-        self.y = random.randrange(self.radius, game_config.height - self.radius)
+        self.x = random.randrange(self.width, game_config.width - self.width)
+        self.y = random.randrange(self.height, game_config.height - self.height)
         self.direction = Direction.UP
         self.x_vel = 0
         self.y_vel = 0
@@ -160,6 +159,7 @@ class Zombie(object):
         target = game_state.blockshead
         if self.cooldown > 0:
             self.cooldown -= 1
+            return
         if self.injury_cooldown > 0:
             self.injury_cooldown -= 1
             return
@@ -213,12 +213,26 @@ class Zombie(object):
         return self.images[self.direction]
 
     def contact(self, game_state):
-        target = game_state.blockshead
-        horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
-        vertical = abs(target.y - self.y) < target.radius + self.radius + 2
-        if horizontal and vertical and self.cooldown == 0:
-            target.injure(1, game_state)
-            self.cooldown = 10
+        bh = game_state.blockshead
+        # Only attack walls if they are directly in the way of blockshead
+        bh_diff = np.array([bh.x - self.x, bh.y - self.y])
+        bh_diff = bh_diff / np.linalg.norm(bh_diff)
+        for target in [game_state.blockshead] + game_state.fakewalls:
+            target_diff = np.array([target.x - self.x, target.y - self.y])
+            target_diff = target_diff / np.linalg.norm(target_diff)
+            cosine = np.dot(target_diff, bh_diff)
+            
+            # Note that the cosine is always 1.0 if target == blockshead
+            if not cosine >= 0.95:
+                continue
+
+            horizontal = abs(target.x - self.x) < target.width // 2 + self.radius + 2
+            vertical = abs(target.y - self.y) < target.height // 2 + self.radius + 2
+            
+            if horizontal and vertical and self.cooldown == 0:
+                target.injure(1, game_state)
+                self.cooldown = 20
+                break
     
     def injure(self, damage, game_state):
         self.health -= damage
@@ -311,11 +325,11 @@ class Devil(object):
 
     def contact(self, game_state):
         target = game_state.blockshead
-        horizontal = abs(target.x - self.x) < target.radius + self.radius + 2
-        vertical = abs(target.y - self.y) < target.radius + self.radius + 2
+        horizontal = abs(target.x - self.x) < target.width // 2 + self.radius + 2
+        vertical = abs(target.y - self.y) < target.height // 2 + self.radius + 2
         if horizontal and vertical and self.cooldown == 0 and self.injury_cooldown == 0:
             target.injure(1, game_state)
-            self.cooldown = 10
+            self.cooldown = 20
         elif self.cooldown == 0 and self.injury_cooldown == 0:
             print("Devil attack")
             attack = DevilAttack(self, game_state)

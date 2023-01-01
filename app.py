@@ -274,6 +274,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.devils = [z for z in game_state.devils if z.health >= 1]
             game_state.shots = [s for s in game_state.shots if s.lifetime >= 0]
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
+            game_state.fakewalls = [b for b in game_state.fakewalls if b.health >= 0]
             game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
             game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
             new_weapons, _ = update_weapons(game_config, game_state)

@@ -106,9 +106,9 @@ class Uzi:
         self.range = 300
         self.damage = 11
         self.radius = 30
-        self.shoot_x_start = x_vel * (blockshead.radius - 5) + blockshead.x
+        self.shoot_x_start = x_vel * (blockshead.width - 5) + blockshead.x
         self.shoot_x_end = x_vel * self.range + blockshead.x + 1 + y_vel * ( random.random() - 0.5) * 25
-        self.shoot_y_start = y_vel * (blockshead.radius - 5) + blockshead.y
+        self.shoot_y_start = y_vel * (blockshead.height - 5) + blockshead.y
         self.shoot_y_end = y_vel * self.range + blockshead.y + 1 + x_vel * ( random.random() - 0.5) * 25
         self.lifetime = 3
 
@@ -229,7 +229,7 @@ class DevilAttack:
 
     def contact(self, game_state):
         hit = False
-        for zombie in game_state.zombies + game_state.devils + [game_state.blockshead]:
+        for zombie in game_state.zombies + game_state.devils + [game_state.blockshead] + game_state.fakewalls:
             if zombie == self.devil:
                 continue
             diff_x = zombie.x - self.x
@@ -310,12 +310,18 @@ class Fakewall(object):
         self.x = random.randrange(0, game_config.width)
         self.y = random.randrange(0, game_config.height)
         self.image = pygame.image.load("images/game_elements/fakewall80.png")
-        self.radius = 35
-        self.width = self.radius
-        self.height = self.radius
+        self.width = 60
+        self.height = 80
+        self.health = 21
         
     def get_image(self):
         return self.image
 
     def get_coordinates(self):
         return self.x, self.y
+
+    def injure(self, damage, game_state):
+        self.health -= damage
+        print("Injure ")
+        
+        # TODO: implement visual damage rendering
