@@ -5,8 +5,8 @@ class GameConfig:
     canvas: bool
     background_color = "#EBDCC7"
     font = ('Helvetica','30','bold')
-    weapons = {"pistol": 1, "uzi": 3, "shotgun": 5}
-    ammo = {"uzi": 100, "shotgun": 20}
+    weapons = {"pistol": 1, "uzi": 3, "shotgun": 5, "fakewalls": 10}
+    ammo = {"uzi": 100, "shotgun": 20, "fakewalls": 10}
     multiplier_step = 0.0002
     blockshead_speed = 2.0
     zombie_speed = 0.5
@@ -14,7 +14,7 @@ class GameConfig:
     max_health = 200
     map_width = 2000
     map_height = 1500
-    zombie_spawn_rate = 0.05
+    zombie_spawn_rate = 0.01
     height: int
     width: int
 

@@ -67,7 +67,7 @@ def add_zombies(game_config, game_state, window):
             game_state.zombies.append(zombie)
             game_state.level_zombies -= 1
 
-    devil_rate = 0.05
+    devil_rate = 0.1
     if np_choice([True, False], p=[devil_rate, 1.0 - devil_rate]):
         if game_state.level_devils >= 1:
             devil = Devil(window, game_config)
@@ -79,6 +79,7 @@ def new_level(game_config, game_state, window):
     game_state.number_of_zombies += 2
     game_state.level_zombies = game_state.number_of_zombies
     game_state.level_devils = 1 + game_state.number_of_zombies // 10
+    print(game_state.level_zombies, game_state.level_devils)
     game_state.zombies = []
     
     healthbox_x = random.randrange(0, game_config.width)
@@ -236,7 +237,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
     fps = []
     #game_state.messages.append(("ebuns", 100))
     while True:
-        if len(game_state.zombies) == 0 and game_state.level_zombies == 0:
+        if len(game_state.zombies) == 0 and game_state.level_zombies == 0 and len(game_state.devils) == 0:
             game_config, game_state, window = new_level(game_config, game_state, window)
         dt = clock.tick(60)
         fps = fps[-10:]
@@ -275,7 +276,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.healthboxes = [b for b in game_state.healthboxes if b.active]
             game_state.blood_marks = [b for b in game_state.blood_marks if b.level_lifetime >= 0]
             game_state.multiplier = max(game_state.multiplier - game_config.multiplier_step, 1.0)
-            new_weapons, new_ammo = update_weapons(game_config, game_state)
+            new_weapons, _ = update_weapons(game_config, game_state)
             game_state.available_weapons += new_weapons
             game_state.max_ammo = update_ammo(game_config, game_state)
             if len(new_weapons) >= 1:

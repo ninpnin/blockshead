@@ -95,6 +95,10 @@ class Blockshead(object):
                 elif self.weapon == "fireball":
                     #shot = Fireball(window, game_config, game_state)
                     self.cooldown = 45
+                elif self.weapon == "fakewall":
+                    #shot = Fireball(window, game_config, game_state)
+                    print("fakewall")
+                    self.cooldown = 15
                 
                 # Automatically change to pistol if out of ammo
                 if self.ammo() == 0:
