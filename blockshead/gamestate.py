@@ -14,6 +14,7 @@ class GameConfig:
     max_health = 200
     map_width = 2000
     map_height = 1500
+    zombie_spawn_rate = 0.05
     height: int
     width: int
 

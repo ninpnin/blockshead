@@ -56,8 +56,13 @@ def draw_messages(window, game_state, game_config):
         y += 40
 
 def add_zombies(game_config, game_state, window):
+    x = random.randrange(40, game_config.width // 20)
+    if random.choice([True, False]):
+        x = game_config.width - x
+    y = random.randrange(40, game_config.height -40)
+
     if game_state.level_zombies >= 1:
-        zombie = Zombie(window, game_config)
+        zombie = Zombie(window, game_config, init_coords=(x,y))
         if not zombie._check_collisions(game_state, game_config):
             game_state.zombies.append(zombie)
             game_state.level_zombies -= 1
@@ -66,7 +71,7 @@ def add_zombies(game_config, game_state, window):
     #return game_config, game_state
         
 def new_level(game_config, game_state, window):
-    game_state.number_of_zombies += 1
+    game_state.number_of_zombies += 2
     game_state.level_zombies = game_state.number_of_zombies
     game_state.zombies = []
     
@@ -278,7 +283,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
                     game_state.blockshead.ammo_dict[w] = game_state.max_ammo[w]
                 print(game_state.max_ammo)
             
-            if np_choice([True, False], p=[0.1, 0.9]):
+            if np_choice([True, False], p=[game_config.zombie_spawn_rate, 1.0 - game_config.zombie_spawn_rate]):
                 add_zombies(game_config, game_state, window)
             
             # Draw characters and objects
