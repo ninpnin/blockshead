@@ -108,7 +108,7 @@ class Blockshead(object):
         self.health -= damage
 
 class Zombie(object):
-    def __init__(self, window, game_config):
+    def __init__(self, window, game_config, init_coords=None):
         self.direction = Direction.UP
         self.images = {}
         for direction in Direction:
@@ -120,8 +120,11 @@ class Zombie(object):
         self.width = 2 * self.radius
         self.height = 2 * self.radius
 
-        self.x = random.randrange(self.radius, game_config.width // 4)
-        self.y = random.randrange(self.radius, game_config.height - self.radius)
+        if init_coords is None:
+            self.x = random.randrange(self.radius, game_config.width // 20)
+            self.y = random.randrange(self.radius, game_config.height - self.radius)
+        else:
+            self.x, self.y = init_coords
 
         self.speed = game_config.zombie_speed
         self.health = 50

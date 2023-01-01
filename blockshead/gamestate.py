@@ -26,6 +26,7 @@ class GameState:
     number_of_mines = 0
     paused = False
     multiplier = 1
+    level_zombies = 1
     available_weapons = ["pistol"]
     max_ammo = {"pistol": "infinity"}
     shots = []

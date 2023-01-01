@@ -5,6 +5,7 @@ from blockshead.objects import *
 import pygame
 from pygame import mixer
 import math
+from numpy.random import choice as np_choice
 
 def initialize_game():
     pygame.init()
@@ -54,14 +55,20 @@ def draw_messages(window, game_state, game_config):
         window.blit(img, (x, y))
         y += 40
 
-
-def new_level(game_config, game_state, window):
-    game_state.number_of_zombies += 1
-    game_state.zombies = []
-    while len(game_state.zombies) < game_state.number_of_zombies:
+def add_zombies(game_config, game_state, window):
+    if game_state.level_zombies >= 1:
         zombie = Zombie(window, game_config)
         if not zombie._check_collisions(game_state, game_config):
             game_state.zombies.append(zombie)
+            game_state.level_zombies -= 1
+            print("Add zombie...")
+            
+    #return game_config, game_state
+        
+def new_level(game_config, game_state, window):
+    game_state.number_of_zombies += 1
+    game_state.level_zombies = game_state.number_of_zombies
+    game_state.zombies = []
     
     while len(game_state.devils) < 1:
         devil = Devil(window, game_config)
@@ -223,7 +230,7 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
     fps = []
     #game_state.messages.append(("ebuns", 100))
     while True:
-        if len(game_state.zombies) == 0:
+        if len(game_state.zombies) == 0 and game_state.level_zombies == 0:
             game_config, game_state, window = new_level(game_config, game_state, window)
         dt = clock.tick(60)
         fps = fps[-10:]
@@ -270,6 +277,9 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
                 for w in new_weapons:
                     game_state.blockshead.ammo_dict[w] = game_state.max_ammo[w]
                 print(game_state.max_ammo)
+            
+            if np_choice([True, False], p=[0.1, 0.9]):
+                add_zombies(game_config, game_state, window)
             
             # Draw characters and objects
             # NOTE: Order matters here
