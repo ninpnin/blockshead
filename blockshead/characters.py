@@ -156,11 +156,12 @@ class Zombie(object):
         elif random.choice([True, False]):
             self.angles = [-20] + self.angles
     
-    def _check_collisions(self, game_state, game_config):
-        if self.x >= game_config.width or self.x < 0:
-            return True
-        if self.y >= game_config.height or self.y < 0:
-            return True
+    def _check_collisions(self, game_state, game_config=None):
+        if game_config is not None:
+            if self.x >= game_config.width or self.x < 0:
+                return True
+            if self.y >= game_config.height or self.y < 0:
+                return True
 
         for zombie in game_state.zombies + game_state.devils + game_state.fakewalls + [game_state.blockshead]:
             if zombie is self:
@@ -256,9 +257,17 @@ class Zombie(object):
                 self.cooldown = 20
                 break
     
-    def injure(self, damage, game_state):
+    def injure(self, damage, game_state, direction=None):
         self.health -= damage
         self.injury_cooldown = 11
+        if direction is not None:
+            old_x, old_y = self.x, self.y
+            self.x += direction.value[0] * 5
+            self.y += direction.value[1] * 5
+            collisions = self._check_collisions(game_state)
+            if collisions:
+                self.x, self.y = old_x, old_y
+
         if self.health <= 1:
             blood_mark = Blood(self.x, self.y)
             game_state.blood_marks.append(blood_mark)
@@ -296,11 +305,12 @@ class Devil(object):
         elif random.choice([True, False]):
             self.angles = [-20] + self.angles
     
-    def _check_collisions(self, game_state, game_config):
-        if self.x >= game_config.width or self.x < 0:
-            return True
-        if self.y >= game_config.height or self.y < 0:
-            return True
+    def _check_collisions(self, game_state, game_config=None):
+        if game_config is not None:
+            if self.x >= game_config.width or self.x < 0:
+                return True
+            if self.y >= game_config.height or self.y < 0:
+                return True
 
         for zombie in game_state.zombies + game_state.devils + game_state.fakewalls + [game_state.blockshead]:
             if zombie is self:
@@ -364,9 +374,17 @@ class Devil(object):
             self.cooldown = 300
             self.injury_cooldown = 70
     
-    def injure(self, damage, game_state):
+    def injure(self, damage, game_state, direction=None):
         self.health -= damage
         self.injury_cooldown = 11
+        if direction is not None:
+            old_x, old_y = self.x, self.y
+            self.x += direction.value[0] * 5
+            self.y += direction.value[1] * 5
+            collisions = self._check_collisions(game_state)
+            if collisions:
+                self.x, self.y = old_x, old_y
+
         if self.health <= 1:
             blood_mark = Blood(self.x, self.y)
             healthbox = Healthbox(game_state, self.x, self.y)

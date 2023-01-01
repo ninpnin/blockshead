@@ -41,7 +41,6 @@ Weapons. These classes depict shots coming from the weapons.
 """
 class Pistol:
     def __init__(self, game_config, game_state):
-        canvas = game_config.canvas
         blockshead = game_state.blockshead
         self.direction = blockshead.direction
         x_vel, y_vel = blockshead.direction.value
@@ -70,7 +69,7 @@ class Pistol:
             cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
             cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
-                zombie.injure(self.damage, game_state)
+                zombie.injure(self.damage, game_state, direction=self.direction)
 
         return killed_zombies, killed_devils
 
@@ -128,7 +127,7 @@ class Uzi:
             cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
             cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
-                zombie.injure(self.damage, game_state)
+                zombie.injure(self.damage, game_state, direction=self.direction)
 
         return killed_zombies, killed_devils
 
