@@ -1,3 +1,6 @@
+import logging
+import sys
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 from tkinter import W
 from blockshead.gamestate import *
 from blockshead.characters import Blockshead, Zombie, Devil
@@ -8,6 +11,7 @@ import math
 from numpy.random import choice as np_choice
 
 def initialize_game():
+    logging.info("initialize game")
     pygame.init()
     pygame.display.set_caption('Blockshead')
     game_config = GameConfig(canvas=None, width=1000, height=750)
@@ -64,8 +68,11 @@ def add_zombies(game_config, game_state, window):
     if game_state.level_zombies >= 1:
         zombie = Zombie(window, game_config, init_coords=(x,y))
         if not zombie._check_collisions(game_state, game_config):
+            logging.debug("add zombie")
             game_state.zombies.append(zombie)
             game_state.level_zombies -= 1
+        else:
+            logging.warning("do not add zombie due to collision")
 
     devil_rate = 0.1
     if np_choice([True, False], p=[devil_rate, 1.0 - devil_rate]):
@@ -76,10 +83,11 @@ def add_zombies(game_config, game_state, window):
                 game_state.level_devils -= 1
         
 def new_level(game_config, game_state, window):
+    logging.info("new level")
     game_state.number_of_zombies += 2
     game_state.level_zombies = game_state.number_of_zombies
     game_state.level_devils = 1 + game_state.number_of_zombies // 10
-    print(game_state.level_zombies, game_state.level_devils)
+    logging.info(f"{game_state.level_zombies} zombies and {game_state.level_devils} devils at this level")
     game_state.zombies = []
     
     healthbox_x = random.randrange(0, game_config.width)
@@ -128,7 +136,7 @@ def handle_keys(event, window, game_config, game_state):
                 if index < len(game_state.available_weapons):
                     game_state.blockshead.weapon = game_state.available_weapons[index]
                 else:
-                    print(f"Weapon {index} not available")
+                    logging.warning(f"Weapon {index} not available")
                 #game_state.available_weapons
         # Pause controls
         if event.key == pygame.K_p:
@@ -176,7 +184,7 @@ def update_weapons(game_config, game_state):
     new_weapons, new_ammo = [], dict()
     for weapon, threshold in game_config.weapons.items():
         if game_state.multiplier > threshold and weapon not in game_state.available_weapons:
-            print(f"New weapon: {weapon}")
+            logging.info(f"new weapon: {weapon}")
             game_state.messages.append((f"New weapon: {weapon}", 180))
             new_weapons.append(weapon)
             new_ammo[weapon] = game_config.ammo[weapon]
@@ -216,7 +224,7 @@ def draw_end_screen(game_state, window):
     window.blit(img3, (20, 100))
 
 def end_loop(game_state, window, clock):
-    print("End loop")
+    logging.info("Enter end loop")
     draw_end_screen(game_state, window)
     pygame.display.update()
     while True:
@@ -281,10 +289,10 @@ def main_loop(game_config, game_state, window, clock, levelup=False):
             game_state.available_weapons += new_weapons
             game_state.max_ammo = update_ammo(game_config, game_state)
             if len(new_weapons) >= 1:
-                print("New weapons", new_weapons)
+                logging.debug(f"New weapons {new_weapons}")
                 for w in new_weapons:
                     game_state.blockshead.ammo_dict[w] = game_state.max_ammo[w]
-                print(game_state.max_ammo)
+                logging.debug(f"max ammo: {game_state.max_ammo}")
             
             if np_choice([True, False], p=[game_config.zombie_spawn_rate, 1.0 - game_config.zombie_spawn_rate]):
                 add_zombies(game_config, game_state, window)

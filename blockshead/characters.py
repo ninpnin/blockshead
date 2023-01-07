@@ -5,6 +5,7 @@ from .physics import check_collision
 from .objects import Direction
 from .objects import Pistol, Blood, Uzi, Shotgun, DevilAttack, Healthbox, Fakewall
 import math
+import logging
 
 class Blockshead(object):
     def __init__(self, game_config):
@@ -103,18 +104,18 @@ class Blockshead(object):
                         if check_collision(wall, zombie):
                             collisions = True
                     if not collisions:
-                        print("fakewall added")
+                        logging.info("fakewall added")
                         game_state.fakewalls.append(wall)
                         self.ammo_dict["fake walls"] = max(0, self.ammo() - 1)
                         self.cooldown = 15
                     else:    
-                        print("fakewall not possible here")
+                        logging.debug("fakewall not possible here")
                 
                 # Automatically change to pistol if out of ammo
                 if self.ammo() == 0:
                     self.weapon = "pistol"
             else:
-                print("Out of ammo")
+                logging.info("Out of ammo")
 
             return shot
 
@@ -368,7 +369,7 @@ class Devil(object):
             target.injure(1, game_state)
             self.cooldown = 20
         elif self.cooldown == 0 and self.injury_cooldown == 0:
-            print("Devil attack")
+            logging.debug("Devil attack")
             attack = DevilAttack(self, game_state)
             game_state.shots.append(attack)
             self.cooldown = 300

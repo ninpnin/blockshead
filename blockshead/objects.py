@@ -3,6 +3,7 @@ import random
 import pygame
 from pygame import mixer
 from enum import Enum
+import logging
 
 class Direction(Enum):
     UP = (0,-1)
@@ -286,7 +287,7 @@ class Healthbox(object):
                 game_state.blockshead.health = min(game_config.max_health, game_state.blockshead.health)
                 game_state.messages.append((f"Regained health", 180))
             else:
-                print(f"Picked up {self.type}")
+                logging.info(f"pick up {self.type}")
                 game_state.messages.append((f"Picked up {self.type}", 180))
                 # Increment ammo of self.type 2/3 of max ammo, cap at max ammo
                 max_ammo = game_state.max_ammo[self.type]
@@ -324,6 +325,6 @@ class Fakewall(object):
 
     def injure(self, damage, game_state):
         self.health -= damage
-        print("Injure ")
+        logging.debug("injure fake wall")
         
         # TODO: implement visual damage rendering
