@@ -3,6 +3,7 @@ import random
 import pygame
 from pygame import mixer
 from enum import Enum
+import logging
 
 class Direction(Enum):
     UP = (0,-1)
@@ -23,6 +24,9 @@ class Blood(object):
         self.x = x
         self.y = y
         self.radius = 30
+        self.width = self.radius
+        self.height = self.radius
+
 
     def get_coordinates(self):
         return int(self.x), int(self.y)
@@ -38,7 +42,6 @@ Weapons. These classes depict shots coming from the weapons.
 """
 class Pistol:
     def __init__(self, game_config, game_state):
-        canvas = game_config.canvas
         blockshead = game_state.blockshead
         self.direction = blockshead.direction
         x_vel, y_vel = blockshead.direction.value
@@ -63,11 +66,11 @@ class Pistol:
         
         # Calculate damage inflicted on regular zombies
         killed_zombies = []
-        for zombie in game_state.zombies:
+        for zombie in game_state.zombies + game_state.devils:
             cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
             cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
-                zombie.injure(self.damage, game_state)
+                zombie.injure(self.damage, game_state, direction=self.direction)
 
         return killed_zombies, killed_devils
 
@@ -86,31 +89,31 @@ class Pistol:
 
         return [], []
 
-    def draw(self, window):
+    def draw(self, window, game_state):
         x = min(self.shoot_x_start, self.shoot_x_end)
         width = max(self.shoot_x_start, self.shoot_x_end) - x + 1
 
         y = min(self.shoot_y_start, self.shoot_y_end)
         height = max(self.shoot_y_start, self.shoot_y_end) - y + 1
 
-        pygame.draw.rect(window, (0,0,0), (x, y, width, height))
+        pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
 
 class Uzi:
     def __init__(self, game_config, game_state):
         blockshead = game_state.blockshead
         self.direction = blockshead.direction
         x_vel, y_vel = blockshead.direction.value
-        self.range = 250
+        self.range = 300
         self.damage = 11
         self.radius = 30
-        self.shoot_x_start = x_vel * 5 + blockshead.x
-        self.shoot_x_end = x_vel * self.range + blockshead.x + 1
-        self.shoot_y_start = y_vel * 5 + blockshead.y
-        self.shoot_y_end = y_vel * self.range + blockshead.y + 1
+        self.shoot_x_start = x_vel * (blockshead.width - 5) + blockshead.x
+        self.shoot_x_end = x_vel * self.range + blockshead.x + 1 + y_vel * ( random.random() - 0.5) * 25
+        self.shoot_y_start = y_vel * (blockshead.height - 5) + blockshead.y
+        self.shoot_y_end = y_vel * self.range + blockshead.y + 1 + x_vel * ( random.random() - 0.5) * 25
         self.lifetime = 3
 
         self.attacked = False
-        mixer.music.load('audio/uzi.wav')
+        mixer.music.load('audio/uzi.mp3')
         mixer.music.play()
 
     def contact(self, game_state):
@@ -121,20 +124,16 @@ class Uzi:
         
         # Calculate damage inflicted on regular zombies
         killed_zombies = []
-        for zombie in game_state.zombies:
+        for zombie in game_state.zombies + game_state.devils:
             cond_x = min_x - self.radius - 2 <= zombie.x <= max_x + self.radius + 2
             cond_y = min_y - self.radius - 2 <= zombie.y <= max_y + self.radius + 2
             if cond_x and cond_y:
-                zombie.injure(self.damage, game_state)
+                zombie.injure(self.damage, game_state, direction=self.direction)
 
         return killed_zombies, killed_devils
 
     def update(self, game_config, game_state):
         self.lifetime -= 1
-
-        # Update image width
-        self.shoot_x_start = (self.shoot_x_start + self.shoot_x_end) // 2
-        self.shoot_y_start = (self.shoot_y_start + self.shoot_y_end) // 2
 
         if not self.attacked:
             self.attacked = True
@@ -142,14 +141,11 @@ class Uzi:
 
         return [], []
 
-    def draw(self, window):
-        x = min(self.shoot_x_start, self.shoot_x_end)
-        width = max(self.shoot_x_start, self.shoot_x_end) - x + 1
-
-        y = min(self.shoot_y_start, self.shoot_y_end)
-        height = max(self.shoot_y_start, self.shoot_y_end) - y + 1
-
-        pygame.draw.rect(window, (0,0,0), (x, y, width, height))
+    def draw(self, window, game_state):
+        start = self.shoot_x_start - game_state.offset_x, self.shoot_y_start  - game_state.offset_y
+        end = self.shoot_x_end - game_state.offset_x, self.shoot_y_end  - game_state.offset_y
+        pygame.draw.line(window, (200,190,170), start, end)
+        #pygame.draw.rect(window, (0,0,0), (x - game_state.offset_x, y - game_state.offset_y, width, height))
 
 class Shotgun:
     def __init__(self, game_config, game_state):
@@ -175,7 +171,7 @@ class Shotgun:
         killed_zombies, killed_devils = [], []
 
         # Does damage if distance <= max distance and angle < max angle
-        for zombie in game_state.zombies:
+        for zombie in game_state.zombies + game_state.devils:
             diff = np.array([zombie.x - self.shoot_x_start, zombie.y - self.shoot_y_start])
             distance = np.linalg.norm(diff)
             cosine = np.dot(diff / np.linalg.norm(diff), self.direction)
@@ -198,7 +194,7 @@ class Shotgun:
 
         return [], []
 
-    def draw(self, window):
+    def draw(self, window, game_state):
         for angle in [0, self.angle, -self.angle]:
             theta = np.radians(angle + random.uniform(-10, 10))
             c, s = np.cos(theta), np.sin(theta)
@@ -207,16 +203,71 @@ class Shotgun:
             x = np.array([self.shoot_x_end - self.shoot_x_start, self.shoot_y_end - self.shoot_y_start])
             x_prime = R @ x
             x_end, y_end = int(x_prime[0]) + self.shoot_x_start, int(x_prime[1]) + self.shoot_y_start
-            pygame.draw.line(window, (0,0,0), (self.shoot_x_start, self.shoot_y_start), (x_end, y_end))
+            start = self.shoot_x_start - game_state.offset_x, self.shoot_y_start  - game_state.offset_y
+            end = x_end - game_state.offset_x, y_end  - game_state.offset_y
+            pygame.draw.line(window, (200,190,170), start, end)
 
+class DevilAttack:
+    def __init__(self, devil, game_state):
+        self.speed = 3.5
+        self.devil = devil
+        blockshead = game_state.blockshead
+        self.direction = np.array([blockshead.x - devil.x, blockshead.y - devil.y])
+        self.direction = self.direction / np.linalg.norm(self.direction) * self.speed
+
+        self.image = pygame.image.load("images/game_elements/devil_a_old.png")
+        self.radius = 30
+        initial_step = self.direction * (self.radius / 2) / self.speed
+        self.x = devil.x + initial_step[0]
+        self.y = devil.y + initial_step[1]
+        self.damage = 30
+        self.lifetime = 80
+
+        self.attacked = False
+        #mixer.music.load('audio/uzi.mp3')
+        #mixer.music.play()
+
+    def contact(self, game_state):
+        hit = False
+        for zombie in game_state.zombies + game_state.devils + [game_state.blockshead] + game_state.fakewalls:
+            if zombie == self.devil:
+                continue
+            diff_x = zombie.x - self.x
+            diff_y = zombie.y - self.y
+            if np.sqrt(diff_x ** 2 + diff_y ** 2) <= self.radius:
+                zombie.injure(self.damage, game_state)
+                hit = True
+
+        return hit
+
+    def update(self, game_config, game_state):
+        self.lifetime -= 1
+
+        self.x += self.direction[0]
+        self.y += self.direction[1]
+
+        if not self.attacked:
+            self.attacked = self.contact(game_state)
+        else:
+            self.lifetime = -1
+
+        return [], []
+
+    def draw(self, window, game_state):
+        x = self.x - self.image.get_width() // 2 - game_state.offset_x
+        y = self.y - self.image.get_height() // 2 - game_state.offset_y
+        window.blit(self.image, (x,y))
 
 class Healthbox(object):
     """Static object for drawing blood on the ground"""
-    def __init__(self, game_config, game_state):
-        self.x = random.randrange(0, game_config.width) # create Zombies in the left half of the arena
-        self.y = random.randrange(0, game_config.height)
+    def __init__(self, game_state, x, y):
+        self.x = x
+        self.y = y
         self.image = pygame.image.load("images/game_elements/healthbox.png")
         self.radius = 25
+        self.width = self.radius
+        self.height = self.radius
+
         types = ["health"]
         available_weapons = [w for w in game_state.available_weapons if w != "pistol"]
         if len(available_weapons) > 1:
@@ -234,13 +285,18 @@ class Healthbox(object):
             if self.type == "health":
                 game_state.blockshead.health = game_state.blockshead.health + self.health
                 game_state.blockshead.health = min(game_config.max_health, game_state.blockshead.health)
+                game_state.messages.append((f"Regained health", 180))
             else:
-                print(f"Picked up {self.type}")
+                logging.info(f"pick up {self.type}")
+                game_state.messages.append((f"Picked up {self.type}", 180))
                 # Increment ammo of self.type 2/3 of max ammo, cap at max ammo
-                max_ammo = game_config.ammo[self.type]
+                max_ammo = game_state.max_ammo[self.type]
                 game_state.blockshead.ammo_dict[self.type] += 2 * max_ammo // 3
                 game_state.blockshead.ammo_dict[self.type] = min(max_ammo, game_state.blockshead.ammo_dict[self.type])
             self.active = False
+            newlevel_audio = pygame.mixer.Sound('audio/healthbox.mp3')
+            mixer.Channel(2).play(newlevel_audio)
+
 
     def get_image(self):
         return self.image
@@ -250,14 +306,25 @@ class Healthbox(object):
 
 
 class Fakewall(object):
-    def __init__(self, game_config):
-        self.x = random.randrange(0, game_config.width)
-        self.y = random.randrange(0, game_config.height)
+    def __init__(self, game_config, init_coords=None):
+        if init_coords is None:
+            self.x = random.randrange(0, game_config.width)
+            self.y = random.randrange(0, game_config.height)
+        else:
+            self.x, self.y = init_coords
         self.image = pygame.image.load("images/game_elements/fakewall80.png")
-        self.radius = 35
+        self.width = 60
+        self.height = 80
+        self.health = 21
         
     def get_image(self):
         return self.image
 
     def get_coordinates(self):
         return self.x, self.y
+
+    def injure(self, damage, game_state):
+        self.health -= damage
+        logging.debug("injure fake wall")
+        
+        # TODO: implement visual damage rendering
